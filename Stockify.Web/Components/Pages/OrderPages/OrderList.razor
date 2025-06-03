@@ -1,0 +1,121 @@
+﻿@page "/orders"
+@inject IOrderService svc
+@inject IToastService ToastService
+@using Stockify.Web.ViewModels
+@using Stockify.Web.Components.Shared
+
+<h3>Bestellingen</h3>
+
+@if (IsLoading)
+{
+	<div class="d-flex justify-content-center my-4">
+		<div class="spinner-border text-primary" role="status">
+			<span class="visually-hidden">Laden...</span>
+		</div>
+	</div>
+}
+else if (Orders == null || Orders.Count == 0)
+{
+	<p>Geen bestelllingen gevonden.</p>
+}
+else
+{
+	<div class="d-flex justify-content-end mb-2">
+		<PageSizeSelector PageSize="@PageSize" OnPageSizeChanged="ChangePageSize" />
+		<button class="btn btn-primary" @onclick="ShowModal">
+			<i class="bi bi-plus-lg"></i>
+		</button>
+	</div>
+
+	<table class="table table-bordered">
+		<thead>
+			<tr>
+				<th></th>
+				<SortableHeader SortColumn="customerNumber" CurrentSortBy="@SortBy" SortAscending="@SortAscending" OnSortChanged="HandleSortChanged">
+					Klantnummer
+				</SortableHeader>
+				<SortableHeader SortColumn="customerName" CurrentSortBy="@SortBy" SortAscending="@SortAscending" OnSortChanged="HandleSortChanged">
+					Klantnaam
+				</SortableHeader>
+				<th>Status</th>
+			</tr>
+		</thead>
+		<tbody>
+			@foreach (var Order in Orders)
+			{
+				<tr>
+					<td><a href="Order/@Order.Id">@Order.Id</a></td>
+					<td>@Order.Customer.Number</td>
+					<td>@Order.Customer.Name</td>
+					<td>@Order.Status</td>
+				</tr>
+			}
+		</tbody>
+	</table>
+
+	<Pagination CurrentPage="@CurrentPage" TotalPages="@TotalPages" OnPageChanged="ChangePage" />
+}
+
+
+@code {
+	public List<Order> Orders { get; set; } = new();
+	public bool IsLoading { get; set; } = true;
+	private bool _showModal = false;
+	private bool IsSaving = false;
+	
+
+	protected override async Task OnInitializedAsync()
+	{
+		await LoadOrdersData();
+	}
+
+	private async Task LoadOrdersData()
+	{
+		ToastService.ShowError("Laden bestellingen...");
+		IsLoading = true;
+		var result = await svc.GetPagedAsync(CurrentPage, PageSize, SortBy, SortAscending);
+		ToastService.ShowSuccess($"{result.TotalCount}Bestellingen gelande...");
+		Orders = result.Items;
+		TotalOrders = result.TotalCount;
+		TotalPages = (int)Math.Ceiling((double)TotalOrders / PageSize);
+		IsLoading = false;
+	}
+
+	private void ShowModal() => _showModal = true;
+	private void HideModal() => _showModal = false;
+
+	// Pagination
+	private int CurrentPage = 1;
+	private int PageSize = 10;
+	private int TotalPages = 1;
+	private int TotalOrders = 0;
+
+	private async Task ChangePage(int page)
+	{
+		if (page < 1 || page > TotalPages) return;
+		CurrentPage = page;
+		await LoadOrdersData();
+	}
+
+	private async Task ChangePageSize(int size)
+	{
+		if (PageSize != size)
+		{
+			PageSize = size;
+			CurrentPage = 1;
+			await LoadOrdersData();
+		}
+	}
+
+	// Sorting
+	private string SortBy = "customerNumber";
+	private bool SortAscending = true;
+
+	private async Task HandleSortChanged((string Column, bool Ascending) sort)
+	{
+		SortBy = sort.Column;
+		SortAscending = sort.Ascending;
+		CurrentPage = 1;
+		await LoadOrdersData();
+	}
+}

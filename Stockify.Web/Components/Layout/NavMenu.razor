@@ -1,0 +1,96 @@
+﻿@implements IDisposable
+@inject NavigationManager NavigationManager
+
+
+<nav class="navbar navbar-expand-lg navbar-light bg-light position-relative">
+	<div class="container">
+		<button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCentered" aria-controls="navbarCentered" aria-expanded="false" aria-label="Toggle navigation">
+			<span class="navbar-toggler-icon"></span>
+		</button>
+
+
+		<a class="navbar-brand mx-auto navbar-brand-centered" href="#">
+			<img src="https://via.placeholder.com/100x40?text=Logo" alt="Logo" height="40">
+		</a>
+
+
+
+		<div class="collapse navbar-collapse justify-content-between" id="navbarCentered">
+			<ul class="navbar-nav me-auto">
+				<li class="nav-item">
+					<NavLink class="nav-link" href="" Match="NavLinkMatch.All">Home</NavLink>
+				</li>
+
+				<li class="nav-item">
+					<NavLink class="nav-link" href="Customers">Klanten</NavLink>
+				</li>
+				<li class="nav-item">
+					<NavLink class="nav-link" href="Products">Producten</NavLink>
+				</li>
+				<li class="nav-item">
+					<NavLink class="nav-link" href="Orders">Bestellingen</NavLink>
+				</li>
+				@*
+				<li class="nav-item">
+					<NavLink class="nav-link" href="counter">Counter</NavLink>
+				</li>
+				<li class="nav-item">
+					<NavLink class="nav-link" href="weather">Weather</NavLink>
+				</li>
+				<li class="nav-item">
+					<NavLink class="nav-link" href="auth">Auth Required</NavLink>
+				</li>
+				*@
+
+			</ul>
+
+			<AuthorizeView>
+				<Authorized>
+					<ul class="navbar-nav ms-auto">
+						<li class="nav-item">
+							<NavLink class="nav-link" href="Account/Manage">@context.User.Identity?.Name</NavLink>
+						</li>
+						<li class="nav-item">
+							<form action="Account/Logout" method="post" class="d-inline">
+								<AntiforgeryToken />
+								<input type="hidden" name="ReturnUrl" value="@currentUrl" />
+								<button class="nav-link btn btn-link" type="submit">Logout</button>
+							</form>
+						</li>
+					</ul>
+				</Authorized>
+				<NotAuthorized>
+					<ul class="navbar-nav ms-auto">
+						<li class="nav-item">
+							<NavLink class="nav-link" href="Account/Register">Register</NavLink>
+						</li>
+						<li class="nav-item">
+							<NavLink class="nav-link" href="Account/Login">Login</NavLink>
+						</li>
+					</ul>
+				</NotAuthorized>
+			</AuthorizeView>
+		</div>
+		</div>
+</nav>
+
+@code {
+	private string? currentUrl;
+
+	protected override void OnInitialized()
+	{
+		currentUrl = NavigationManager.ToBaseRelativePath(NavigationManager.Uri);
+		NavigationManager.LocationChanged += OnLocationChanged;
+	}
+
+	private void OnLocationChanged(object? sender, LocationChangedEventArgs e)
+	{
+		currentUrl = NavigationManager.ToBaseRelativePath(e.Location);
+		StateHasChanged();
+	}
+
+	public void Dispose()
+	{
+		NavigationManager.LocationChanged -= OnLocationChanged;
+	}
+}

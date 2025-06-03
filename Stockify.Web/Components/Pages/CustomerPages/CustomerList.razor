@@ -1,0 +1,196 @@
+﻿@page "/customers"
+@inject ICustomerService svc
+@inject IToastService ToastService
+@using Stockify.Web.ViewModels
+@using Stockify.Web.Components.Shared
+
+<h3>Klanten</h3>
+
+@if (IsLoading)
+{
+	<div class="d-flex justify-content-center my-4">
+		<div class="spinner-border text-primary" role="status">
+			<span class="visually-hidden">Laden...</span>
+		</div>
+	</div>
+}
+else if (Customers == null || Customers.Count == 0)
+{
+	<p>Geen klanten gevonden.</p>
+}
+else
+{
+	<div class="d-flex justify-content-end mb-2">
+		<PageSizeSelector PageSize="@PageSize" OnPageSizeChanged="ChangePageSize" />
+		<button class="btn btn-primary" @onclick="ShowModal">
+			<i class="bi bi-plus-lg"></i>
+		</button>
+	</div>
+
+	<table class="table table-bordered">
+		<thead>
+			<tr>
+				<th></th>
+				<SortableHeader SortColumn="name" CurrentSortBy="@SortBy" SortAscending="@SortAscending" OnSortChanged="HandleSortChanged">
+					Naam
+				</SortableHeader>
+				<SortableHeader SortColumn="city" CurrentSortBy="@SortBy" SortAscending="@SortAscending" OnSortChanged="HandleSortChanged">
+					Adres
+				</SortableHeader>
+				<!-- add other headers -->
+			</tr>
+		</thead>
+		<tbody>
+			@foreach (var customer in Customers)
+			{
+				<tr>
+					<td><a href="customer/@customer.Id">@customer.Number</a></td>
+					<td>@customer.Name</td>
+					<td>@customer.Address</td>
+				</tr>
+			}
+		</tbody>
+	</table>
+
+	<Pagination CurrentPage="@CurrentPage" TotalPages="@TotalPages" OnPageChanged="ChangePage" />
+}
+
+@if (_showModal)
+{
+	<EditForm Model="@NewCustomer" OnValidSubmit="SaveCustomer">
+		<DataAnnotationsValidator />
+		<ValidationSummary />
+		<div class="modal fade show d-block" tabindex="-1">
+			<div class="modal-dialog">
+				<div class="modal-content">
+					<div class="modal-header">
+						<h5 class="modal-title">Nieuwe klant</h5>
+						<button type="button" class="btn-close" @onclick="HideModal"></button>
+					</div>
+					<div class="modal-body">
+						<div class="mb-3">
+							<label class="form-label">Naam</label>
+							<InputText class="form-control" @bind-Value="NewCustomer.Name" />
+							<ValidationMessage For="@(() => NewCustomer.Name)" />
+						</div>
+						<div class="mb-3">
+							<label class="form-label">Straat</label>
+							<InputText class="form-control" @bind-Value="NewCustomer.Street" />
+							<ValidationMessage For="@(() => NewCustomer.Street)" />
+						</div>
+						<div class="mb-3">
+							<label class="form-label">Postcode</label>
+							<InputText class="form-control" @bind-Value="NewCustomer.Zipcode" />
+							<ValidationMessage For="@(() => NewCustomer.Zipcode)" />
+						</div>
+						<div class="mb-3">
+							<label class="form-label">Plaats</label>
+							<InputText class="form-control" @bind-Value="NewCustomer.City" />
+							<ValidationMessage For="@(() => NewCustomer.City)" />
+						</div>
+					</div>
+					<div class="modal-footer">
+						<button type="button" class="btn btn-secondary" @onclick="HideModal" disabled="@IsSaving">Annuleren</button>
+						<button type="submit" class="btn btn-primary" disabled="@IsSaving">
+							@if (IsSaving)
+							{
+								<span class="spinner-border spinner-border-sm me-2"></span>
+							}
+							Opslaan
+						</button>
+					</div>
+				</div>
+			</div>
+		</div>
+		<div class="modal-backdrop fade show"></div>
+	</EditForm>
+}
+
+@code {
+	public List<Customer> Customers { get; set; } = new();
+	public bool IsLoading { get; set; } = true;
+	private bool _showModal = false;
+	private bool IsSaving = false;
+	private CustomerInputModel NewCustomer = new();
+
+	protected override async Task OnInitializedAsync()
+	{
+		await LoadCustomersData();
+	}
+
+	private async Task LoadCustomersData()
+	{
+		IsLoading = true;
+		var result = await svc.GetPagedAsync(CurrentPage, PageSize, SortBy, SortAscending);
+		Customers = result.Items;
+		TotalCustomers = result.TotalCount;
+		TotalPages = (int)Math.Ceiling((double)TotalCustomers / PageSize);
+		IsLoading = false;
+	}
+
+	private void ShowModal() => _showModal = true;
+	private void HideModal() => _showModal = false;
+
+	private async Task SaveCustomer()
+	{
+		IsSaving = true;
+		try
+		{
+			var customer = new Customer
+				{
+					Name = NewCustomer.Name,
+					Street = NewCustomer.Street,
+					ZipCode = NewCustomer.Zipcode,
+					City = NewCustomer.City
+				};
+
+			await svc.AddAsync(customer);
+			await LoadCustomersData();
+			ToastService.ShowSuccess("Klant succesvol toegevoegd.");
+			HideModal();
+		}
+		catch
+		{
+			ToastService.ShowError("Er is een fout opgetreden bij het opslaan.");
+		}
+		finally
+		{
+			IsSaving = false;
+		}
+	}
+
+	// Pagination
+	private int CurrentPage = 1;
+	private int PageSize = 10;
+	private int TotalPages = 1;
+	private int TotalCustomers = 0;
+
+	private async Task ChangePage(int page)
+	{
+		if (page < 1 || page > TotalPages) return;
+		CurrentPage = page;
+		await LoadCustomersData();
+	}
+
+	private async Task ChangePageSize(int size)
+	{
+		if (PageSize != size)
+		{
+			PageSize = size;
+			CurrentPage = 1;
+			await LoadCustomersData();
+		}
+	}
+
+	// Sorting
+	private string SortBy = "name";
+	private bool SortAscending = true;
+
+	private async Task HandleSortChanged((string Column, bool Ascending) sort)
+	{
+		SortBy = sort.Column;
+		SortAscending = sort.Ascending;
+		CurrentPage = 1;
+		await LoadCustomersData();
+	}
+}

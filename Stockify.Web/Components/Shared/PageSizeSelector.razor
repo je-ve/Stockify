@@ -1,0 +1,23 @@
+﻿<div class="d-flex align-items-center mb-3">
+	<label class="me-2 mb-0">Toon:</label>
+	<select class="form-select form-select-sm w-auto" value="@PageSize" @onchange="HandleChange">
+		<option value="3">3</option>
+		<option value="10">10</option>
+		<option value="25">25</option>
+		<option value="50">50</option>
+		<option value="100">100</option>
+	</select>
+</div>
+
+@code {
+	[Parameter] public int PageSize { get; set; }
+	[Parameter] public EventCallback<int> OnPageSizeChanged { get; set; }
+
+	private async Task HandleChange(ChangeEventArgs e)
+	{
+		if (int.TryParse(e.Value?.ToString(), out int newSize))
+		{
+			await OnPageSizeChanged.InvokeAsync(newSize);
+		}
+	}
+}

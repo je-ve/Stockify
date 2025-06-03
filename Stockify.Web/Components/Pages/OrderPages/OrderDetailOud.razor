@@ -1,0 +1,289 @@
+﻿@page "/xorder/{Id:int}"
+@inject IOrderService OrderService
+@inject ICustomerService CustomerService
+@inject IProductService ProductService
+@inject NavigationManager NavigationManager
+@inject IToastService ToastService
+@using Stockify.Web.Extensions
+<h3 class="d-flex justify-content-between align-items-center">
+	Order @(IsNewOrder ? "Aanmaken" : $"#{OrderModel.Id}")
+	<button class="btn btn-primary btn-sm" @onclick="SaveChanges" disabled="@(!CanSave || IsSaving)">
+		@if (IsSaving)
+		{
+			<span class="spinner-border spinner-border-sm me-2"></span>
+		}
+		Opslaan
+	</button>
+</h3>
+
+@IsEditable
+@if (IsLoading)
+{
+	<div class="spinner-border text-primary" role="status"></div>
+}
+else
+{
+
+
+	@*Header*@
+
+	<div class="card mb-3">
+		<div class="card-body">
+			<p><strong>Klantnummer:</strong> @OrderModel.CustomerId</p>
+			<p><strong>Klant:</strong> @(OrderModel.Customer?.Name ?? $"#{OrderModel.CustomerId}")</p>
+			<p><strong>Status:</strong> @OrderModel.Status</p>
+			<button class="btn btn-success" @onclick="ShowEditHeaderModal">Klant bewerken</button>
+		</div>
+	</div>
+
+	@*Edit header model*@
+	@if (ShowEditHeader)
+	{
+		<EditForm Model="OrderModel" OnValidSubmit="UpdateOrderHeaderFromModal">
+			<DataAnnotationsValidator />
+			<ValidationSummary />
+			<div class="modal fade show d-block" tabindex="-1">
+				<div class="modal-dialog">
+					<div class="modal-content">
+						<div class="modal-header">
+							<h5 class="modal-title">Klant aanpassen</h5>
+							<button type="button" class="btn-close" @onclick="()=>ShowEditHeader=false"></button>
+						</div>
+						<div class="modal-body">
+							<label class="form-label">Klant</label>
+							<InputSelect class="form-select" @bind-Value="SelectedCustomerId">
+								@foreach (var c in Customers)
+								{
+									<option value="@c.Id">@c.Name (#@c.Id)</option>
+								}
+							</InputSelect>
+						</div>
+						<div class="modal-footer">
+							<button class="btn btn-secondary" @onclick="()=>ShowEditHeader=false">Annuleren</button>
+							<button type="submit" class="btn btn-primary">Bevestigen</button>
+						</div>
+					</div>
+				</div>
+			</div>
+			<div class="modal-backdrop fade show"></div>
+		</EditForm>
+	}
+
+	@*Orderlijnen*@
+
+	<h3>Orderlijnen</h3>
+	<div class="mb-2">
+		<button class="btn btn-ternary" @onclick="() => ShowOrderLineModal(null)" disabled="@(!IsEditable)">
+			<i class="bi bi-plus-lg"> Voeg product toe</i>
+		</button>
+	</div>
+
+	@*
+    <button class="btn btn-secondary mb-2" @onclick="ShowOrderLineModal" disabled="!IsEditable">+ Orderlijn toevoegen</button>
+*@
+
+	@if (OrderModel == null || OrderModel.OrderLines.Count == 0)
+	{
+		<p>Geen producten gevonden.</p>
+	}
+	else
+	{
+		<table class="table table-bordered">
+			<thead>
+				<tr>
+					<th>Product</th>
+					<th>Aantal</th>
+					<th></th>
+				</tr>
+			</thead>
+			<tbody>
+				@foreach (var line in OrderModel.OrderLines)
+				{
+					<tr>
+						<td>@line.ProductId</td>
+						<td>@line.Quantity</td>
+						<td>
+
+							<button class="btn btn-sm btn-outline-primary me-1" @onclick="() => ShowOrderLineModal(line)" disabled="@(!IsEditable)">Bewerk</button>
+							@*	<button class="btn btn-sm btn-outline-danger" @onclick="() => ConfirmRemoveOrderLine(line)" disabled="!IsEditable">Verwijder</button> *@
+
+						</td>
+					</tr>
+				}
+			</tbody>
+		</table>
+	}
+
+	@if (ShowEditLine)
+	{
+		<EditForm Model="@currentLine" OnValidSubmit="UpdateOrderLineFromModal">
+			<DataAnnotationsValidator />
+			@*<ValidationSummary /> *@
+			<div class="modal fade show d-block" tabindex="-1">
+				<div class="modal-dialog">
+					<div class="modal-content">
+						<div class="modal-header">
+							<h5 class="modal-title">Orderlijn bewerken</h5>
+							<button type="button" class="btn-close" @onclick="CloseOrderLineModal"></button>
+						</div>
+						<div class="modal-body">
+							<div class="mb-3">
+
+								<div class="mb-3">
+									<label class="form-label">Product</label>
+									<InputSelect class="form-select" @bind-Value="currentLine.ProductId">
+										<option value="">-- Selecteer een product --</option>
+										@foreach (var product in Products)
+										{
+											<option value="@product.Id">@product.Name</option>
+										}
+									</InputSelect>
+									<ValidationMessage For="@(() => currentLine.ProductId)" />
+								</div>
+
+								<div class="mb-3">
+									<label class="form-label">Aantal</label>
+									<InputNumber class="form-control" @bind-Value="currentLine.Quantity" />
+									<ValidationMessage For="@(() => currentLine.Quantity)" />
+								</div>
+							</div>
+						</div>
+						<div class="modal-footer">
+							<button type="button" class="btn btn-secondary" @onclick="CloseOrderLineModal" disabled="@IsSaving">Annuleren</button>
+							<button type="submit" class="btn btn-primary" disabled="@IsSaving">
+								@if (IsSaving)
+								{
+									<span class="spinner-border spinner-border-sm me-2"></span>
+								}
+								Opslaan
+							</button>
+						</div>
+					</div>
+				</div>
+			</div>
+			<div class="modal-backdrop fade show"></div>
+		</EditForm>
+
+
+	}
+
+}
+
+@code {
+	[Parameter] public int Id { get; set; }
+
+	private bool ShowEditHeader = false;
+	private bool ShowEditLine = false;
+	private bool IsNewOrder => Id == 0;
+	private bool IsLoading = true;
+	private bool IsEditable => IsNewOrder || OrderModel?.Status == OrderStatus.Created;
+	private int SelectedCustomerId { get; set; }
+	private bool IsSaving = false;  //nog aan te passen
+	private List<Customer> Customers = new();
+	private List<Product> Products = new();
+
+	private OrderViewModel OrderModel = new();
+	private OrderLineViewModel? currentLine = null;
+	private OrderLineInputModel? orderLineInput = null;
+	private bool CanSave => OrderModel.CustomerId > 0 && OrderModel.OrderLines.Any();
+
+	protected override async Task OnInitializedAsync()
+	{
+		Customers = await CustomerService.GetAllAsync();
+		Products = await ProductService.GetAllAsync();
+
+		if (IsNewOrder)
+		{
+			OrderModel = new OrderViewModel();
+		}
+		else
+		{
+			var order = await OrderService.GetByIdAsyncAsNoTracking(Id);
+			if (order == null)
+			{
+				ToastService.ShowError("Order niet gevonden.");
+				NavigationManager.NavigateTo("/orders");
+				return;
+			}
+			OrderModel = order.ToInputModel();
+		}
+
+		IsLoading = false;
+	}
+
+	private void UpdateOrderHeaderFromModal()
+	{
+		OrderModel.CustomerId = SelectedCustomerId;
+		//OrderModel.Customer = Customers.FirstOrDefault(c => c.Id == SelectedCustomerId);
+		var selected = Customers.FirstOrDefault(c => c.Id == SelectedCustomerId);
+		if (selected != null) OrderModel.Customer = selected;
+		ShowEditHeader = false;
+	}
+
+		private void UpdateOrderLineFromModal()
+		{
+			if (currentLine.Id==0) OrderModel.OrderLines.Add(currentLine);
+			else
+			{
+			
+			}
+			//checkmaxinputfunctie maken. Dit is dan voor dit product availablestock - wat als in andere lijnen zit voor zelfde product
+			//eventueel een lijntje in form toevoegen met je hebt al zoveel besteld van dit product.... Je kan nog maximum... Visibility hiervan dan op true zetten als input te groot is.
+			ShowEditLine = false;
+		}
+
+	private void ShowEditHeaderModal()
+	{
+		SelectedCustomerId = OrderModel.CustomerId;
+		ShowEditHeader = true;
+	}
+
+	private void ShowOrderLineModal(OrderLineViewModel? line)
+	{
+		if (line != null) currentLine = line;         //nieuwe bestelregel
+		else currentLine = new OrderLineViewModel(); // 
+		ShowEditLine = true;
+	}
+
+	private void CloseOrderLineModal()
+	{
+		ShowEditLine = false;
+		currentLine = null; // reset currentLine
+		orderLineInput = null; // reset OrderLineInput
+	}
+
+	private async Task SaveChanges()
+	{
+		if (IsNewOrder) await SaveOrder();
+		else await UpdateOrder();
+	}
+
+	private async Task SaveOrder()
+	{
+		Console.WriteLine("SaveOrder");
+		var newOrder = OrderModel.ToEntity(); // from input model to Order
+		var result = await OrderService.AddAsync(newOrder);
+		ToastService.ShowSuccess("Order aangemaakt.");
+		NavigationManager.NavigateTo($"/order/{result.Id}");
+	}
+
+	private async Task UpdateOrder()
+	{
+		Console.WriteLine("UpdateOrder");
+		var order = OrderModel.ToEntity();
+	//	await OrderService.UpdateAsyncUntracked(order);
+
+		var updatedOrder = await OrderService.GetByIdAsyncAsNoTracking(order.Id);
+		OrderModel = updatedOrder!.ToInputModel(); // nieuwe orderlines krijgen id ipv 0, anders worden nieuwe meermaals toegevoegd wanneer je meermaals op opslaan klikt
+
+		ToastService.ShowSuccess("Order bijgewerkt.");
+	}
+
+	private async Task ConfirmDelete()
+	{
+		// add confirmation modal here later
+		await OrderService.DeleteAsync(OrderModel.Id);
+		ToastService.ShowSuccess("Order verwijderd.");
+		NavigationManager.NavigateTo("/orders");
+	}
+}

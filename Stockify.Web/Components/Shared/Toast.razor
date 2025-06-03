@@ -1,0 +1,50 @@
+﻿@inject IToastService ToastService
+
+@if (_visible)
+{
+    <div class="toast-container position-fixed top-0 end-0 p-3" style="z-index: 9999;">
+        <div class="toast show @(_isError ? "bg-danger text-white" : "bg-success text-white")">
+            <div class="toast-body">
+                @_message
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    private string _message = "";
+    private bool _isError = false;
+    private bool _visible = false;
+    private System.Timers.Timer? _timer;
+
+    protected override void OnInitialized()
+    {
+        Console.WriteLine("Toast initialized");
+        ToastService.OnShow += ShowToast;
+    }
+
+    private void ShowToast(ToastMessage message)
+    {
+        _message = message.Message;
+        _isError = message.IsError;
+        _visible = true;
+
+        _timer?.Dispose();
+        _timer = new System.Timers.Timer(3000); // 3 seconds
+        _timer.Elapsed += (s, e) =>
+        {
+            _visible = false;
+            InvokeAsync(StateHasChanged);
+        };
+        _timer.AutoReset = false;
+        _timer.Start();
+
+        InvokeAsync(StateHasChanged);
+    }
+
+    public void Dispose()
+    {
+        ToastService.OnShow -= ShowToast;
+        _timer?.Dispose();
+    }
+}

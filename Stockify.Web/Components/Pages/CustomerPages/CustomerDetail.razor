@@ -1,0 +1,146 @@
+﻿@page "/customer/{Id:int}"
+@inject ICustomerService svc
+@inject NavigationManager NavigationManager
+@inject IToastService ToastService
+@using Stockify.Web.ViewModels
+@using Stockify.Web.Components.Shared
+
+<h3>Klantdetails</h3>
+
+@if (IsLoading)
+{
+	<div class="d-flex justify-content-center my-4">
+		<div class="spinner-border text-primary" role="status">
+			<span class="visually-hidden">Laden...</span>
+		</div>
+	</div>
+}
+else if (Customer == null)
+{
+	<p>Geen klant gevonden.</p>
+}
+else
+{
+	<div class="card">
+		<div class="card-body">
+			<h5 class="card-title">@Customer.Name</h5>
+			<p class="card-text">@Customer.Street, @Customer.ZipCode @Customer.City</p>
+			<button class="btn btn-primary me-2" @onclick="ShowEditModal"><i class="bi bi-pencil-square"></i> Bewerken</button>
+			<button class="btn btn-danger" @onclick="ShowDeleteConfirmation"><i class="bi bi-trash"></i> Verwijderen</button>
+		</div>
+	</div>
+}
+
+@* Edit Modal *@
+@if (ShowEdit)
+{
+	<EditForm Model="EditModel" OnValidSubmit="UpdateCustomer">
+		<DataAnnotationsValidator />
+		<ValidationSummary />
+		<div class="modal fade show d-block" tabindex="-1">
+			<div class="modal-dialog">
+				<div class="modal-content">
+					<div class="modal-header">
+						<h5 class="modal-title">Klant bewerken</h5>
+						<button type="button" class="btn-close" @onclick="HideEditModal"></button>
+					</div>
+					<div class="modal-body">
+						<InputText class="form-control mb-2" @bind-Value="EditModel.Name" placeholder="Naam" />
+						<InputText class="form-control mb-2" @bind-Value="EditModel.Street" placeholder="Straat" />
+						<InputText class="form-control mb-2" @bind-Value="EditModel.Zipcode" placeholder="Postcode" />
+						<InputText class="form-control mb-2" @bind-Value="EditModel.City" placeholder="Plaats" />
+					</div>
+					<div class="modal-footer">
+						<button class="btn btn-secondary" @onclick="HideEditModal">Annuleren</button>
+						<button type="submit" class="btn btn-primary">Opslaan</button>
+					</div>
+				</div>
+			</div>
+		</div>
+		<div class="modal-backdrop fade show"></div>
+	</EditForm>
+}
+
+@* Delete Confirmation *@
+@if (ShowDeleteDialog)
+{
+	<div class="modal fade show d-block" tabindex="-1">
+		<div class="modal-dialog">
+			<div class="modal-content">
+				<div class="modal-header">
+					<h5 class="modal-title">Bevestig verwijderen</h5>
+					<button type="button" class="btn-close" @onclick="HideDeleteDialog"></button>
+				</div>
+				<div class="modal-body">
+					<p>Weet je zeker dat je deze klant wilt verwijderen?</p>
+				</div>
+				<div class="modal-footer">
+					<button class="btn btn-secondary" @onclick="HideDeleteDialog">Annuleren</button>
+					<button class="btn btn-danger" @onclick="DeleteCustomer">Verwijderen</button>
+				</div>
+			</div>
+		</div>
+	</div>
+	<div class="modal-backdrop fade show"></div>
+}
+
+@code {
+	[Parameter] public int Id { get; set; }
+
+	private Customer? Customer;
+	private CustomerInputModel EditModel = new();
+	private bool IsLoading = true;
+	private bool ShowEdit = false;
+	private bool ShowDeleteDialog = false;
+
+	protected override async Task OnInitializedAsync()
+	{
+		await LoadCustomer();
+	}
+
+	private async Task LoadCustomer()
+	{
+		IsLoading = true;
+		Customer = await svc.GetByIdAsync(Id);
+		if (Customer != null)
+		{
+			EditModel = new CustomerInputModel
+				{
+					Name = Customer.Name,
+					Street = Customer.Street,
+					Zipcode = Customer.ZipCode,
+					City = Customer.City
+				};
+		}
+		IsLoading = false;
+	}
+
+	private void ShowEditModal() => ShowEdit = true;
+	private void HideEditModal() => ShowEdit = false;
+
+	private void ShowDeleteConfirmation() => ShowDeleteDialog = true;
+	private void HideDeleteDialog() => ShowDeleteDialog = false;
+
+	private async Task UpdateCustomer()
+	{
+		if (Customer == null) return;
+
+		Customer.Name = EditModel.Name;
+		Customer.Street = EditModel.Street;
+		Customer.ZipCode = EditModel.Zipcode;
+		Customer.City = EditModel.City;
+
+		await svc.UpdateAsync(Customer);
+		ShowEdit = false;
+		await LoadCustomer();
+		ToastService.ShowSuccess("Klant succesvol aangepast.");
+	}
+
+	private async Task DeleteCustomer()
+	{
+		if (Customer == null) return;
+		await svc.DeleteAsync(Customer.Id);
+		ToastService.ShowSuccess("Klant succesvol verwijderd.");
+		NavigationManager.NavigateTo("/customers");
+	}
+}

@@ -1,0 +1,545 @@
+﻿@page "/order/{id:int}"
+@inject IOrderService OrderService
+@inject IOrderLineService OrderLineService
+@inject ICustomerService CustomerService
+@inject IProductService ProductService
+@inject NavigationManager NavigationManager
+@inject IToastService ToastService
+
+<h3 class="d-flex justify-content-between align-items-center">
+	Order @(isNewOrder ? "Aanmaken" : $"#{order.Id}")
+</h3>
+
+@if (isLoading)
+{
+	<div class="spinner-border text-primary" role="status"></div>
+}
+else
+{
+	@************@
+	@***HEADER***@
+	@************@
+
+	@*Header card*@
+
+	<div class="card mb-3">
+		<div class="card-body">
+			<div class="d-flex justify-content-between">
+				<div>
+					<p><strong>Klantnummer: </strong>#@order?.Customer?.Number</p>
+					<p>
+						<strong>Naam:</strong> @order?.Customer?.Name <br />
+						<strong>Status:</strong> @order?.Status
+					</p>
+				</div>
+				<div>
+					<button class="btn btn-ternary text-secondary" @onclick="OpenEditHeaderModal"><i class="bi bi-pencil me-1"> Klant bewerken</i></button>
+				</div>
+			</div>
+		</div>
+	</div>
+
+
+	@*Edit header model*@
+
+	@if (showEditHeader)
+	{
+		<EditForm Model="editHeaderModel" OnValidSubmit="UpdateOrderHeaderFromModal">
+			<DataAnnotationsValidator />
+			<ValidationSummary />
+			<div class="modal fade show d-block" tabindex="-1">
+				<div class="modal-dialog">
+					<div class="modal-content">
+						<div class="modal-header">
+							<h5 class="modal-title">Klant aanpassen</h5>
+							<button type="button" class="btn-close" @onclick="()=>showEditHeader=false"></button>
+						</div>
+						<div class="modal-body">
+							<label class="form-label">Klant</label>
+							<InputSelect class="form-select" @bind-Value="editHeaderModel.SelectedCustomerId">
+								@foreach (var c in customers)
+								{
+									<option value="@c.Id">@c.Name (#@c.Number)</option>
+								}
+							</InputSelect>
+						</div>
+						<div class="modal-footer">
+							<button class="btn btn-secondary" @onclick="()=>showEditHeader=false">Annuleren</button>
+							<button type="submit" class="btn btn-primary">Bevestigen</button>
+						</div>
+					</div>
+				</div>
+			</div>
+			<div class="modal-backdrop fade show"></div>
+		</EditForm>
+	}
+	
+	@****************@
+	@***ORDERLINES***@
+	@****************@
+
+	@*Title en add button*@
+
+	@if (!showOrderLines)
+	{
+		<p>Selecteer een klant</p>
+	}
+	else
+	{
+		<h3>Orderlijnen</h3>
+
+		<div class="mb-2">
+			<button class="btn btn-ternary text-secondary" @onclick="() => OpenOrderLineModal(0)" disabled="@(!isEditable)">
+				<i class="bi bi-plus-lg"> Voeg product toe</i>
+			</button>
+		</div>
+
+
+		@*Table*@
+
+		@if (id == 0 || order == null || order.OrderLines.Count == 0)
+		{
+			<p>Geen producten gevonden.</p>
+		}
+		else
+		{
+			<table class="table table-bordered">
+				<thead>
+					<tr>
+						<th>Serienummer</th>
+						<th>Product</th>
+						<th>Aantal</th>
+						<th></th>
+					</tr>
+				</thead>
+				<tbody>
+					@foreach (var line in order.OrderLines)
+					{
+						<tr>
+							<td>@line.Product.SerialNumber</td>
+							<td>@line.Product.Name</td>
+							<td>@line.Quantity</td>
+							<td>
+								<button class="btn btn-sm btn-outline-primary me-1" @onclick="() => OpenOrderLineModal(line.Id)" disabled="@(!isEditable)">Bewerk</button>
+								<button class="btn btn-sm btn-outline-danger" @onclick="() => OpenConfirmRemoveModal(line.Id)" disabled="@(order?.OrderLines?.Count==1)">Verwijder</button>
+							</td>
+						</tr>
+					}
+				</tbody>
+			</table>
+		}
+
+		@*OrderLineModal*@
+		@if (showEditLineModal)
+		{
+			<EditForm Model="@orderLineInputModel" OnValidSubmit="UpdateOrderLineFromModal">
+				<DataAnnotationsValidator />
+				@*<ValidationSummary /> *@
+				<div class="modal fade show d-block" tabindex="-1">
+					<div class="modal-dialog">
+						<div class="modal-content">
+							<div class="modal-header">
+								<h5 class="modal-title">Orderlijn @(orderLineInputModel.Id > 0 ? "Bewerken" : "Toevoegen")</h5>
+								<button type="button" class="btn-close" @onclick="CloseOrderLineModal"></button>
+							</div>
+							<div class="modal-body">
+								<div class="mb-3">
+									<div class="mb-3">
+										<label class="form-label">Product</label>
+										<div class="dropdown">
+											<button class="btn btn-outline-secondary dropdown-toggle w-100 text-start" type="button" data-bs-toggle="dropdown">
+												@selectedProductText
+											</button>
+											<ul class="dropdown-menu w-100">
+												@foreach (var option in selectOptions)
+												{
+													<li>
+														<button type="button"
+																class="dropdown-item d-flex justify-content-between align-items-center"
+																disabled="@option.Disabled"
+																@onclick="() => SelectProduct(option)">
+															<span>@option.Text</span>
+															<span class="text-muted ms-3">Max @option.Max</span>
+														</button>
+													</li>
+												}
+											</ul>
+										</div>
+										<ValidationMessage For="@(() => orderLineInputModel.ProductId)" />
+									</div>
+
+									<div class="mb-3">
+										<label class="form-label">Aantal</label>
+										<InputNumber class=" @(isQuantityTooHigh ? " border-danger is-invalid form-control" : "form-control border border-1 border-secondary")"
+													 @bind-Value="orderLineInputModel.Quantity"
+													 @oninput="ClearQuantityValidation" />
+										@* <ValidationMessage For="@(() => orderLineInputModel.Quantity)" /> *@
+										@if (isQuantityTooHigh)
+										{
+											<div class="text-danger mt-1">
+												Kies een hoeveelheid tussen 1 en @selectedProductMax.
+											</div>
+										}
+									</div>
+								</div>
+							</div>
+							<div class="modal-footer">
+								<button type="button" class="btn btn-secondary" @onclick="CloseOrderLineModal" disabled="@isSaving">Annuleren</button>
+								<button type="submit" class="btn btn-primary" disabled="@isSaving">
+									@if (isSaving)
+									{
+										<span class="spinner-border spinner-border-sm me-2"></span>
+									}
+									Opslaan
+								</button>
+							</div>
+						</div>
+					</div>
+				</div>
+				<div class="modal-backdrop fade show"></div>
+			</EditForm>
+		}
+	}
+}
+
+@* Delete Confirmation *@
+@if (ShowDeleteDialog)
+{
+	<div class="modal fade show d-block" tabindex="-1">
+		<div class="modal-dialog">
+			<div class="modal-content">
+				<div class="modal-header">
+					<h5 class="modal-title">Bevestig verwijderen</h5>
+					<button type="button" class="btn-close" @onclick="HideConfirmRemoveModal"></button>
+				</div>
+				<div class="modal-body">
+					<p>Weet je zeker dat je dit product wilt verwijderen?</p>
+					<p> <i>Product: @(order!.OrderLines!.FirstOrDefault(ol => ol.Id == lineToDeleteId)!.Product.Name) <br /> Aantal: @(order!.OrderLines.FirstOrDefault(ol => ol.Id == lineToDeleteId)!.Quantity) </i></p>
+				</div>
+				<div class="modal-footer">
+					<button class="btn btn-secondary" @onclick="HideConfirmRemoveModal">Annuleren</button>
+					<button class="btn btn-danger" @onclick="DeleteOrderLine">Verwijderen</button>
+				</div>
+			</div>
+		</div>
+	</div>
+	<div class="modal-backdrop fade show"></div>
+}
+
+@code {
+
+	[Parameter] public int id { get; set; }
+
+	//Tonen van de orderlines en edit header en line modals
+	private bool showEditHeader = false;
+	private bool showEditLineModal = false;
+	private bool showOrderLines => id != 0 || (order != null && order.Customer != null);
+	private bool isEditable = true;
+
+	bool isNewOrder => id == 0;
+	bool isLoading = true;
+	bool isSaving = false;
+
+	//Klant en product lijsten en huidig order
+	private List<Customer> customers = new();
+	private List<Product> products = new();
+	private Order? order = new();
+
+	//private OrderLine? currentLine = null;
+	//	int currentEditProductId = 0;
+	//int currentEditProductQuantity = 0;
+
+	protected override async Task OnInitializedAsync()
+	{
+
+		//Lijsten klanten en producten ophalen
+		customers = await CustomerService.GetAllAsync();
+		products = await ProductService.GetAllAsync();
+
+		//order initialiseren
+		if (isNewOrder) order = new Order();
+		else
+		{
+			order = await OrderService.GetByIdAsync(id);
+			if (order == null)
+			{
+				ToastService.ShowError("Order niet gevonden.");
+				NavigationManager.NavigateTo("/orders");
+				return;
+			}
+		}
+		isLoading = false;
+	}
+
+	/////////////////////
+	//Header aanpassen//
+	////////////////////
+	private EditHeaderModel editHeaderModel = new();
+
+	private void OpenEditHeaderModal()
+	{
+		editHeaderModel.SelectedCustomerId = order?.Customer?.Id ?? 0;
+		showEditHeader = true;
+	}
+
+	private void CloseEditHeaderModal()
+	{
+		showEditHeader = false;
+	}
+
+	private async Task UpdateOrderHeaderFromModal()
+	{
+		//als zelfde klant geselecteerd niets doen
+		if (order?.Customer?.Id == editHeaderModel.SelectedCustomerId)
+		{
+			showEditHeader = false;
+		}
+		else
+		{
+			var selected = customers.FirstOrDefault(c => c.Id == editHeaderModel.SelectedCustomerId);
+			if (selected != null)
+			{
+				order.Customer = selected;
+				order.CustomerId = selected.Id;
+			}
+			if (selected != null) order.Customer = selected;
+			showEditHeader = false;
+			if (id > 0)
+			{
+				isSaving = true;
+				await OrderService.UpdateAsync(order);
+				products = await ProductService.GetAllAsync();
+				isSaving = false;
+				ToastService.ShowSuccess("Klant bijgewerkt");
+			}
+		}
+
+	}
+
+	//////////////////////////
+	//Orderlijnen aanpassen//
+	////////////////////////
+
+	private OrderLineInputModel orderLineInputModel = new();
+	private List<SelectOption> selectOptions = new List<SelectOption>();
+	private string selectedProductText = "-- Selecteer een product --";
+	private bool isQuantityTooHigh = false;
+	private int? selectedProductMax;
+
+	private void OpenOrderLineModal(int orderLineId)
+	{
+		orderLineInputModel = new OrderLineInputModel();
+		selectOptions = new List<SelectOption>();
+		isQuantityTooHigh = false;
+
+		if (orderLineId == 0)
+		{
+			// New orderline
+			selectOptions = products.Select(p => new SelectOption
+				{
+					Value = p.Id,
+					Text = p.Name,
+					Max = p.AvailableStock,
+					Disabled = p.AvailableStock == 0
+				}).ToList();
+
+			selectedProductText = "-- Selecteer een product --";
+		}
+		else
+		{
+			// Edit existing orderline
+			var currentLine = order?.OrderLines?.FirstOrDefault(ol => ol.Id == orderLineId);
+			if (currentLine == null)
+			{
+				ToastService.ShowError("Bestelregel niet gevonden.");
+				return;
+			}
+
+			// Fill the model with existing data
+			orderLineInputModel.Id = currentLine.Id;
+			orderLineInputModel.ProductId = currentLine.ProductId;
+			orderLineInputModel.Quantity = currentLine.Quantity;
+
+			// Generate select options
+			foreach (var product in products)
+			{
+				bool isCurrent = product.Id == currentLine.ProductId;
+				selectOptions.Add(new SelectOption
+					{
+						Value = product.Id,
+						Text = product.Name,
+						Max = isCurrent ? product.AvailableStock + currentLine.Quantity : product.AvailableStock,
+						Disabled = !isCurrent && product.AvailableStock == 0
+					});
+			}
+
+			// Set selectedProductText
+			var selected = products.FirstOrDefault(p => p.Id == currentLine.ProductId);
+			selectedProductText = selected != null ? selected.Name : "-- Selecteer een product --";
+		}
+
+		showEditLineModal = true;
+	}
+
+	private void CloseOrderLineModal()
+	{
+		showEditLineModal = false;
+		//currentLine = null;
+	}
+
+	private async Task UpdateOrderLineFromModal()
+	{
+		// Controleer of de hoeveelheid niet groter is dan de beschikbare voorraad
+		var selectedProduct = selectOptions.FirstOrDefault(p => p.Value == orderLineInputModel.ProductId);
+		selectedProductMax = selectedProduct?.Max ?? 0;
+
+		if (selectedProduct != null && (orderLineInputModel.Quantity < 1 || orderLineInputModel.Quantity > selectedProduct.Max))
+		{
+			isQuantityTooHigh = true;
+			return;
+		}
+		isQuantityTooHigh = false;
+
+
+		//Nieuwe bestelregel toevoegen als Id 0 is
+		if (orderLineInputModel.Id == 0)
+		{
+			showEditLineModal = false;
+
+			//als id 0 is nieuw order aanmaken in database
+			if (id == 0)
+			{
+				order.OrderLines.Add(new OrderLine { ProductId = orderLineInputModel.ProductId, Quantity = orderLineInputModel.Quantity });
+				isSaving = true;
+				products = await ProductService.GetAllAsync();
+				var result = await OrderService.AddAsync(order);
+				isSaving = false;
+				ToastService.ShowSuccess("Bestelling toegevoegd");
+				NavigationManager.NavigateTo($"/order/{result.Id}");
+			}
+
+			//anders bestellijn toevoegen
+			else
+			{
+				if (ProductAlreadyInOrder(orderLineInputModel))
+				{
+					isSaving = true;
+					await AddToExistingOrderLine(orderLineInputModel);
+					products = await ProductService.GetAllAsync();
+					isSaving = false;
+					ToastService.ShowSuccess("Bestelling bijgewerkt");
+				}
+				else
+				{
+					isSaving = true;
+					await AddAndSaveNewOrderLine(orderLineInputModel);
+					products = await ProductService.GetAllAsync();
+					isSaving = false;
+					ToastService.ShowSuccess("Product toegevoegd");
+				}
+			}
+		}
+
+		//Bestaande bestelregel updaten
+		else
+		{
+			var existingLine = order!.OrderLines.FirstOrDefault(ol => ol.Id == orderLineInputModel.Id);
+
+			if ((existingLine != null) && (existingLine.Quantity == orderLineInputModel.Quantity) && (existingLine.ProductId == orderLineInputModel.ProductId))
+			{
+				//als niets veranderd, niets doen bij save
+			}
+			else if (existingLine != null)
+			{
+				if (ProductAlreadyInOrder(orderLineInputModel))
+				{
+					// Als het product al in de order staat, voeg de hoeveelheid toe aan de bestaande regel
+					isSaving = true;
+					await AddToExistingOrderLine(orderLineInputModel);
+					//Huidige bestellijn verwijderen
+					await OrderLineService.DeleteAsync(existingLine.Id);
+					products = await ProductService.GetAllAsync();
+					isSaving = false;
+					ToastService.ShowSuccess("Bestelling bijgewerkt");
+				}
+				else
+				{
+					existingLine.ProductId = orderLineInputModel.ProductId;
+					existingLine.Quantity = orderLineInputModel.Quantity;
+					isSaving = true;
+					ToastService.ShowSuccess("Bestelling aan het bijwerken");
+					await OrderLineService.UpdateAsync(existingLine);
+					products = await ProductService.GetAllAsync();
+					isSaving = false;
+					//ToastService.ShowSuccess("Bestelling bijgewerkt");
+				}
+			}
+		}
+		CloseOrderLineModal();
+	}
+
+	private bool ProductAlreadyInOrder(OrderLineInputModel orderLineInputModel)
+	{
+		// Controleer of er al een orderregel is met hetzelfde product
+		var existingLine = order.OrderLines.FirstOrDefault(ol => (ol.ProductId == orderLineInputModel.ProductId && ol.Id != orderLineInputModel.Id));
+		return existingLine != null;
+	}
+
+	private async Task AddToExistingOrderLine(OrderLineInputModel orderLineInputModel)
+	{
+		// Zoek bestaande orderregel
+		var existingLine = order.OrderLines.FirstOrDefault(ol => (ol.ProductId == orderLineInputModel.ProductId && ol.Id != orderLineInputModel.Id));
+		if (existingLine != null)
+		{
+			// Voeg de nieuwe hoeveelheid toe aan de bestaande regel
+			existingLine.Quantity += orderLineInputModel.Quantity;
+			await OrderLineService.UpdateAsync(existingLine);
+		}
+	}
+
+	private async Task AddAndSaveNewOrderLine(OrderLineInputModel orderLineInputModel)
+	{
+		OrderLine newOrderLine = new OrderLine { ProductId = orderLineInputModel.ProductId, Quantity = orderLineInputModel.Quantity };
+		newOrderLine.OrderId = order.Id;
+		await OrderLineService.AddAsync(newOrderLine);
+	}
+
+	////////////////////
+	//Lijn verwijderen//
+	////////////////////
+	///
+	private bool ShowDeleteDialog = false;
+	private int lineToDeleteId = 0;
+	private void OpenConfirmRemoveModal(int lineId)
+	{
+		lineToDeleteId = lineId;
+		ShowDeleteDialog = true;
+	}
+
+	private void HideConfirmRemoveModal()
+	{
+		lineToDeleteId = 0;
+		ShowDeleteDialog = false;
+	}
+
+	private async Task DeleteOrderLine()
+	{
+		if (lineToDeleteId == 0) return;
+		await OrderLineService.DeleteAsync(lineToDeleteId);
+		ShowDeleteDialog = false;
+		ToastService.ShowSuccess("Bestellijn verwijderd.");
+	}
+
+	//helper functions for select
+
+	private void SelectProduct(SelectOption option)
+	{
+		orderLineInputModel.ProductId = option.Value;
+		selectedProductText = option.Text;
+	}
+
+	private void ClearQuantityValidation(ChangeEventArgs e)
+	{
+		isQuantityTooHigh = false;
+	}
+}

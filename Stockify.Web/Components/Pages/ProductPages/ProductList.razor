@@ -1,0 +1,201 @@
+﻿@page "/products"
+@inject IProductService svc
+@inject IToastService ToastService
+@using Stockify.Web.ViewModels
+@using Stockify.Web.Components.Shared
+@using Stockify.Extensions
+@rendermode InteractiveServer
+
+<h3>producten</h3>
+
+@if (IsLoading)
+{
+	<div class="d-flex justify-content-center my-4">
+		<div class="spinner-border text-primary" role="status">
+			<span class="visually-hidden">Laden...</span>
+		</div>
+	</div>
+}
+else if (Products == null || Products.Count == 0)
+{
+	<p>Geen producten gevonden.</p>
+}
+else
+{
+	<div class="d-flex justify-content-end mb-2">
+		<PageSizeSelector PageSize="@PageSize" OnPageSizeChanged="ChangePageSize" />
+		<button class="btn btn-primary" @onclick="ShowModal">
+			<i class="bi bi-plus-lg"></i>
+		</button>
+	</div>
+
+	<table class="table table-bordered">
+		<thead>
+			<tr>
+				<th></th>
+				<SortableHeader SortColumn="SerialNumber" CurrentSortBy="@SortBy" SortAscending="@SortAscending" OnSortChanged="HandleSortChanged">
+					Serienummer
+				</SortableHeader>
+				<SortableHeader SortColumn="Name" CurrentSortBy="@SortBy" SortAscending="@SortAscending" OnSortChanged="HandleSortChanged">
+					Naam
+				</SortableHeader>
+				<SortableHeader SortColumn="TotalStock" CurrentSortBy="@SortBy" SortAscending="@SortAscending" OnSortChanged="HandleSortChanged">
+					Totale voorraad
+				</SortableHeader>
+				<SortableHeader SortColumn="AvailableStock" CurrentSortBy="@SortBy" SortAscending="@SortAscending" OnSortChanged="HandleSortChanged">
+					Beschikbare voorraad
+				</SortableHeader>
+				<SortableHeader SortColumn="TotalStockActions" CurrentSortBy="@SortBy" SortAscending="@SortAscending" OnSortChanged="HandleSortChanged">
+					Aantal voorraadacties
+				</SortableHeader>
+				<SortableHeader SortColumn="LastStockAction" CurrentSortBy="@SortBy" SortAscending="@SortAscending" OnSortChanged="HandleSortChanged">
+					Laatste voorraadactie
+				</SortableHeader>
+			</tr>
+		</thead>
+		<tbody>
+			@foreach (var Product in Products)
+			{
+				<tr>
+					<td><a href="Product/@Product.Id">@Product.Id</a></td>
+					<td>@Product.SerialNumber</td>
+					<td>@Product.Name</td>
+					<td>@Product.TotalStock</td>
+					<td>@Product.AvailableStock</td>
+					<td>@Product.TotalStockActions</td>
+					<td>@Product.LastStockAction.ToBelgianFormat()</td>
+				</tr>
+			}
+		</tbody>
+	</table>
+
+	<Pagination CurrentPage="@CurrentPage" TotalPages="@TotalPages" OnPageChanged="ChangePage" />
+}
+
+@if (_showModal)
+{
+	<EditForm Model="@NewProduct" OnValidSubmit="SaveProduct">
+		<DataAnnotationsValidator />
+		<ValidationSummary />
+		<div class="modal fade show d-block" tabindex="-1">
+			<div class="modal-dialog">
+				<div class="modal-content">
+					<div class="modal-header">
+						<h5 class="modal-title">Nieuw product</h5>
+						<button type="button" class="btn-close" @onclick="HideModal"></button>
+					</div>
+					<div class="modal-body">
+						<div class="mb-3">
+							<label class="form-label">Naam</label>
+							<InputText class="form-control" @bind-Value="NewProduct.Name" />
+							<ValidationMessage For="@(() => NewProduct.Name)" />
+						</div>
+						<div class="mb-3">
+							<label class="form-label">Serienummer</label>
+							<InputNumber class="form-control" @bind-Value="NewProduct.SerialNumber" />
+							<ValidationMessage For="@(() => NewProduct.SerialNumber)" />
+						</div>						
+					</div>
+					<div class="modal-footer">
+						<button type="button" class="btn btn-secondary" @onclick="HideModal" disabled="@IsSaving">Annuleren</button>
+						<button type="submit" class="btn btn-primary" disabled="@IsSaving">
+							@if (IsSaving)
+							{
+								<span class="spinner-border spinner-border-sm me-2"></span>
+							}
+							Opslaan
+						</button>
+					</div>
+				</div>
+			</div>
+		</div>
+		<div class="modal-backdrop fade show"></div>
+	</EditForm>
+}
+
+@code {
+	public List<Product> Products { get; set; } = new();
+	public bool IsLoading { get; set; } = true;
+	private bool _showModal = false;
+	private bool IsSaving = false;
+	private ProductInputModel NewProduct = new();
+
+	protected override async Task OnInitializedAsync()
+	{
+		await LoadProductsData();
+	}
+
+	private async Task LoadProductsData()
+	{
+		IsLoading = true;
+		var result = await svc.GetPagedAsync(CurrentPage, PageSize, SortBy, SortAscending);
+		Products = result.Items;
+		TotalProducts = result.TotalCount;
+		TotalPages = (int)Math.Ceiling((double)TotalProducts / PageSize);
+		IsLoading = false;
+	}
+
+	private void ShowModal() => _showModal = true;
+	private void HideModal() => _showModal = false;
+
+	private async Task SaveProduct()
+	{
+		IsSaving = true;
+		try
+		{
+			var Product = new Product
+				{
+					SerialNumber = NewProduct.SerialNumber,
+					Name = NewProduct.Name								
+				};
+
+			await svc.AddAsync(Product);
+			await LoadProductsData();
+			ToastService.ShowSuccess("product succesvol toegevoegd.");
+			HideModal();
+		}
+		catch
+		{
+			ToastService.ShowError("Er is een fout opgetreden bij het opslaan.");
+		}
+		finally
+		{
+			IsSaving = false;
+		}
+	}
+
+	// Pagination
+	private int CurrentPage = 1;
+	private int PageSize = 10;
+	private int TotalPages = 1;
+	private int TotalProducts = 0;
+
+	private async Task ChangePage(int page)
+	{
+		if (page < 1 || page > TotalPages) return;
+		CurrentPage = page;
+		await LoadProductsData();
+	}
+
+	private async Task ChangePageSize(int size)
+	{
+		if (PageSize != size)
+		{
+			PageSize = size;
+			CurrentPage = 1;
+			await LoadProductsData();
+		}
+	}
+
+	// Sorting
+	private string SortBy = "name";
+	private bool SortAscending = true;
+
+	private async Task HandleSortChanged((string Column, bool Ascending) sort)
+	{
+		SortBy = sort.Column;
+		SortAscending = sort.Ascending;
+		CurrentPage = 1;
+		await LoadProductsData();
+	}
+}

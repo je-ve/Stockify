@@ -1,0 +1,371 @@
+﻿@page "/product/{Id:int}"
+@inject IProductService productSvc
+@inject IStockActionService stockActionSvc
+@inject NavigationManager NavigationManager
+@inject IToastService ToastService
+@using Stockify.Web.ViewModels
+@using Stockify.Web.Components.Shared
+@using Stockify.Extensions
+
+<h3>Productfiche @Product?.Name</h3>
+
+@if (IsLoading)
+{
+	<div class="d-flex justify-content-center my-4">
+		<div class="spinner-border text-primary" role="status">
+			<span class="visually-hidden">Laden...</span>
+		</div>
+	</div>
+}
+else if (Product == null)
+{
+	<p>Geen product gevonden.</p>
+}
+else
+{
+	<div class="card">
+		<div class="card-body">
+			<div class="d-flex justify-content-between align-items-start flex-wrap">
+				<div>
+					<h5 class="card-title mb-1">Naam: @Product.Name</h5>
+					<p class="card-text">Serienummer: @Product.SerialNumber</p>
+				</div>
+				<div>
+					<p class="card-title mb-1">
+						Totale voorraad: @Product.TotalStock <br />
+						Beschikbare voorraad: @Product.AvailableStock<br />
+						Aantal voorraadacties: @Product.TotalStockActions<br />
+						Laatste voorraadactie: @Product.LastStockAction.ToBelgianFormat()<br />
+					</p>
+				</div>
+
+				<div class="btn-group mt-1 mt-md-0">
+					<button class="btn btn-primary me-2" @onclick="ShowEditModal">
+						<i class="bi bi-pencil-square"></i> Bewerken
+					</button>
+					<button class="btn btn-danger" @onclick="ShowDeleteConfirmation">
+						<i class="bi bi-trash"></i> Verwijderen
+					</button>
+				</div>
+			</div>
+		</div>
+	</div>
+}
+
+@* Edit Modal *@
+@if (ShowEdit)
+{
+	<EditForm Model="EditModel" OnValidSubmit="UpdateProduct">
+		<DataAnnotationsValidator />
+		<ValidationSummary />
+		<div class="modal fade show d-block" tabindex="-1">
+			<div class="modal-dialog">
+				<div class="modal-content">
+					<div class="modal-header">
+						<h5 class="modal-title">Product bewerken</h5>
+						<button type="button" class="btn-close" @onclick="HideEditModal"></button>
+					</div>
+					<div class="modal-body">
+						<label class="form-label">Naam</label><InputText class="form-control mb-2" @bind-Value="EditModel.Name" placeholder="Naam" />
+						<label class="form-label">Serienummer</label><InputNumber class="form-control mb-2" @bind-Value="EditModel.SerialNumber" placeholder="Serienummer" />
+					</div>
+					<div class="modal-footer">
+						<button class="btn btn-secondary" @onclick="HideEditModal">Annuleren</button>
+						<button type="submit" class="btn btn-primary">Opslaan</button>
+					</div>
+				</div>
+			</div>
+		</div>
+		<div class="modal-backdrop fade show"></div>
+	</EditForm>
+}
+
+@* Delete Confirmation *@
+@if (ShowDeleteDialog)
+{
+	<div class="modal fade show d-block" tabindex="-1">
+		<div class="modal-dialog">
+			<div class="modal-content">
+				<div class="modal-header">
+					<h5 class="modal-title">Bevestig verwijderen</h5>
+					<button type="button" class="btn-close" @onclick="HideDeleteDialog"></button>
+				</div>
+				<div class="modal-body">
+					<p>Weet je zeker dat je dit product wilt verwijderen?</p>
+				</div>
+				<div class="modal-footer">
+					<button class="btn btn-secondary" @onclick="HideDeleteDialog">Annuleren</button>
+					<button class="btn btn-danger" @onclick="Deleteproduct">Verwijderen</button>
+				</div>
+			</div>
+		</div>
+	</div>
+	<div class="modal-backdrop fade show"></div>
+}
+
+
+
+@*  Actielijst*@
+
+<h3>Voorraadbewerkingen</h3>
+
+@if (Product == null || Product.TotalStockActions == 0)
+{
+	<p>Geen voorraadbewerkingen gevonden.</p>
+
+	<div class="mb-2">
+		<button class="btn btn-ternary" @onclick="@(() => ShowModal(StockActionType.Addition))">
+			<i class="bi bi-plus-lg"> Voeg voorraad toe</i>
+		</button>
+	</div>
+}
+else
+{
+	<div class="d-flex justify-content-end mb-2">
+		<PageSizeSelector PageSize="@PageSize" OnPageSizeChanged="ChangePageSize" />
+		<button class="btn btn-primary" @onclick="@(() => ShowModal(StockActionType.Addition))">
+			<i class="bi bi-plus-lg"></i>
+		</button>
+		<button class="btn btn-primary" @onclick="@(() => ShowModal(StockActionType.Reduction))">
+			<i class="bi bi-dash-lg"></i>
+		</button>
+	</div>
+
+	<table class="table table-bordered">
+		<thead>
+			<tr>
+				<SortableHeader SortColumn="type" CurrentSortBy="@SortBy" SortAscending="@SortAscending" OnSortChanged="HandleSortChanged">
+					Type
+				</SortableHeader>
+				<SortableHeader SortColumn="quantity" CurrentSortBy="@SortBy" SortAscending="@SortAscending" OnSortChanged="HandleSortChanged">
+					Aantal
+				</SortableHeader>
+				<SortableHeader SortColumn="createdat" CurrentSortBy="@SortBy" SortAscending="@SortAscending" OnSortChanged="HandleSortChanged">
+					Tijdstip
+				</SortableHeader>
+				<th>Ordernummer</th>
+			</tr>
+		</thead>
+		<tbody>
+			@foreach (var action in StockActions)
+			{
+				<tr>
+					<td>@action.Type</td>
+					<td>@action.Quantity</td>
+					<td>@action.CreatedAt.ToBelgianFormat()</td>
+					<td>""</td>
+				</tr>
+			}
+		</tbody>
+	</table>
+
+	<Pagination CurrentPage="@CurrentPage" TotalPages="@TotalPages" OnPageChanged="ChangePage" />
+}
+
+@if (_showModal)
+{
+	<EditForm Model="@NewStockAction" OnValidSubmit="SaveStockAction">
+		<DataAnnotationsValidator />
+		@*<ValidationSummary /> *@
+		<div class="modal fade show d-block" tabindex="-1">
+			<div class="modal-dialog">
+				<div class="modal-content">
+					<div class="modal-header">
+						<h5 class="modal-title">Nieuwe voorraadbewerking</h5>
+						<button type="button" class="btn-close" @onclick="HideModal"></button>
+					</div>
+					<div class="modal-body">
+						<div class="mb-3">
+							<label class="form-label">Aantal</label>
+							<InputNumber class="form-control" @bind-Value="NewStockAction.Quantity" />
+							<ValidationMessage For="@(() => NewStockAction.Quantity)" />
+							@if (_selectedType == StockActionType.Reduction)
+							{
+								<small class="text-muted">Maximale reductie: @Product.TotalStock</small>
+							}
+						</div>
+					</div>
+					<div class="modal-footer">
+						<button type="button" class="btn btn-secondary" @onclick="HideModal" disabled="@IsSaving">Annuleren</button>
+						<button type="submit" class="btn btn-primary" disabled="@IsSaving">
+							@if (IsSaving)
+							{
+								<span class="spinner-border spinner-border-sm me-2"></span>
+							}
+							Opslaan
+						</button>
+					</div>
+				</div>
+			</div>
+		</div>
+		<div class="modal-backdrop fade show"></div>
+	</EditForm>
+}
+@*Einde actielijst*@
+
+
+
+@code {
+	[Parameter] public int Id { get; set; }
+
+	private Product? Product;
+	private ProductInputModel EditModel = new();
+	private bool IsLoading = true;
+	private bool ShowEdit = false;
+	private bool ShowDeleteDialog = false;
+	private StockActionType _selectedType;
+
+	protected override async Task OnInitializedAsync()
+	{
+		await LoadProduct();
+		await LoadStockActions();
+	}
+
+	private async Task LoadProduct()
+	{
+		IsLoading = true;
+		Product = await productSvc.GetByIdAsync(Id);
+		if (Product != null)
+		{
+			EditModel = new ProductInputModel
+				{
+					Name = Product.Name,
+					SerialNumber = Product.SerialNumber
+				};
+		}
+		IsLoading = false;
+	}
+
+	private void ShowEditModal() => ShowEdit = true;
+	private void HideEditModal() => ShowEdit = false;
+
+	private void ShowDeleteConfirmation() => ShowDeleteDialog = true;
+	private void HideDeleteDialog() => ShowDeleteDialog = false;
+
+	private async Task UpdateProduct()
+	{
+		if (Product == null) return;
+
+		Product.Name = EditModel.Name;
+		Product.SerialNumber = EditModel.SerialNumber;
+
+		await productSvc.UpdateAsync(Product);
+		ShowEdit = false;
+		await LoadProduct();
+		ToastService.ShowSuccess("Product aangepast.");
+	}
+
+	private async Task Deleteproduct()
+	{
+		if (Product == null) return;
+
+		await productSvc.DeleteAsync(Product.Id);
+		ToastService.ShowSuccess("Product verwijderd.");
+		NavigationManager.NavigateTo("/products");
+	}
+
+	@*Actielijst code*@
+
+	public List<StockAction> StockActions { get; set; } = new();
+	@* public bool IsLoading { get; set; } = true; *@
+	private bool _showModal = false;
+	private bool IsSaving = false;
+	private StockActionInputModel NewStockAction = new();
+
+	private async Task LoadStockActions()
+	{
+		IsLoading = true;
+		//  public async Task<PaginatedResult<StockAction>> GetPagedAsync(int productId, int pageNumber, int pageSize, string sortBy, bool ascending)
+		var result = await stockActionSvc.GetPagedAsync(Product.Id, CurrentPage, PageSize, SortBy, SortAscending);
+		StockActions = result.Items;
+		TotalStockActions = result.TotalCount;
+		TotalPages = (int)Math.Ceiling((double)TotalStockActions / PageSize);
+		IsLoading = false;
+	}
+
+	private void ShowModal(StockActionType type)
+	{
+		_selectedType = type;
+		_selectedType = type;
+		NewStockAction = new StockActionInputModel
+			{
+				MaxValue = type == StockActionType.Reduction ? Product?.TotalStock : null
+			};
+
+		_showModal = true;
+	}
+
+	private void HideModal() => _showModal = false;
+
+	private async Task SaveStockAction()
+	{
+		IsSaving = true;
+		try
+		{
+
+			/*
+			if (_selectedType == StockActionType.Reduction && NewStockAction.Quantity > Product.TotalStock)
+			{
+				ToastService.ShowError("Reductie kan niet groter zijn dan de totale voorraad.");
+				IsSaving = false;
+				return;
+				}
+			*/
+							var stockAction = new StockAction
+				{
+					ProductId = Product.Id,
+					Type = _selectedType,
+					Quantity = NewStockAction.Quantity,
+				};
+
+			await stockActionSvc.AddAsync(stockAction);
+			await LoadProduct();
+			await LoadStockActions();
+			ToastService.ShowSuccess("Actie succesvol toegevoegd.");
+			HideModal();
+		}
+		catch
+		{
+			ToastService.ShowError("Er is een fout opgetreden bij het opslaan.");
+		}
+		finally
+		{
+			IsSaving = false;
+		}
+	}
+
+	// Pagination
+	private int CurrentPage = 1;
+	private int PageSize = 10;
+	private int TotalPages = 1;
+	private int TotalStockActions = 0;
+
+	private async Task ChangePage(int page)
+	{
+		if (page < 1 || page > TotalPages) return;
+		CurrentPage = page;
+		await LoadStockActions();
+	}
+
+	private async Task ChangePageSize(int size)
+	{
+		if (PageSize != size)
+		{
+			PageSize = size;
+			CurrentPage = 1;
+			await LoadStockActions();
+		}
+	}
+
+	// Sorting
+	private string SortBy = "name";
+	private bool SortAscending = true;
+
+	private async Task HandleSortChanged((string Column, bool Ascending) sort)
+	{
+		SortBy = sort.Column;
+		SortAscending = sort.Ascending;
+		CurrentPage = 1;
+		await LoadStockActions();
+	}
+}
