@@ -7,6 +7,8 @@ using Stockify.Web.Components.Account;
 using Stockify.Logic;
 using Stockify.Data;
 using Stockify.Objects;
+using Azure.Core;
+using Azure;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -30,13 +32,11 @@ var connectionString = builder.Configuration.GetConnectionString("DefaultConnect
 builder.Services.AddDatabaseDeveloperPageExceptionFilter();
 
 builder.Services.AddIdentityCore<ApplicationUser>(options => options.SignIn.RequireConfirmedAccount = true)
-    .AddEntityFrameworkStores<StockifyContext>()
-    
+    .AddEntityFrameworkStores<StockifyContext>()    
     .AddSignInManager()
     .AddDefaultTokenProviders();
 
 builder.Services.AddSingleton<IEmailSender<ApplicationUser>, IdentityNoOpEmailSender>();
-
 builder.Services.AddServices(builder.Configuration);
 
 var app = builder.Build();
@@ -54,9 +54,27 @@ else
 }
 
 app.UseHttpsRedirection();
-
 app.UseStaticFiles();
 app.UseAntiforgery();
+
+// Redirect to login if unauthorized (401)
+app.UseStatusCodePages(context =>
+{
+    var httpContext = context.HttpContext;
+    var response = httpContext.Response;
+    var request = httpContext.Request;
+
+    if (response.StatusCode == 401)
+    {
+        var returnUrl = Uri.EscapeDataString(request.Path + request.QueryString);
+        response.Redirect($"/Identity/Account/Login?returnUrl={returnUrl}");
+    }
+    else if (response.StatusCode == 403)
+    {
+        response.Redirect("/forbidden");
+    }
+    return Task.CompletedTask;
+});
 
 app.MapRazorComponents<App>().AddInteractiveServerRenderMode();
 //app.MapRazorPages();

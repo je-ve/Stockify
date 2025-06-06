@@ -1,8 +1,11 @@
 ﻿@page "/orders"
 @inject IOrderService svc
 @inject IToastService ToastService
+@using Microsoft.AspNetCore.Authorization
 @using Stockify.Web.ViewModels
 @using Stockify.Web.Components.Shared
+
+@attribute [Authorize]
 
 <h3>Bestellingen</h3>
 

@@ -2,8 +2,11 @@
 @inject ICustomerService svc
 @inject NavigationManager NavigationManager
 @inject IToastService ToastService
+@using Microsoft.AspNetCore.Authorization
 @using Stockify.Web.ViewModels
 @using Stockify.Web.Components.Shared
+
+@attribute [Authorize]
 
 <h3>Klantdetails</h3>
 

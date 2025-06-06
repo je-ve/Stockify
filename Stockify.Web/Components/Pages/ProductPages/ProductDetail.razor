@@ -3,9 +3,12 @@
 @inject IStockActionService stockActionSvc
 @inject NavigationManager NavigationManager
 @inject IToastService ToastService
+@using Microsoft.AspNetCore.Authorization
 @using Stockify.Web.ViewModels
 @using Stockify.Web.Components.Shared
 @using Stockify.Extensions
+
+@attribute [Authorize]
 
 <h3>Productfiche @Product?.Name</h3>
 

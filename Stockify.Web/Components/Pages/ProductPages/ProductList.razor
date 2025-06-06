@@ -1,10 +1,13 @@
 ﻿@page "/products"
 @inject IProductService svc
 @inject IToastService ToastService
+@using Microsoft.AspNetCore.Authorization
 @using Stockify.Web.ViewModels
 @using Stockify.Web.Components.Shared
 @using Stockify.Extensions
 @rendermode InteractiveServer
+
+@attribute [Authorize]
 
 <h3>producten</h3>
 

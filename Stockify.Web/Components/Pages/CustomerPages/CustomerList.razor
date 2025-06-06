@@ -1,8 +1,11 @@
 ﻿@page "/customers"
 @inject ICustomerService svc
 @inject IToastService ToastService
+@using Microsoft.AspNetCore.Authorization
 @using Stockify.Web.ViewModels
 @using Stockify.Web.Components.Shared
+
+@attribute [Authorize]
 
 <h3>Klanten</h3>
 
