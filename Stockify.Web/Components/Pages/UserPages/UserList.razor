@@ -1,0 +1,462 @@
+﻿@page "/users"
+@inject IToastService ToastService
+@using Microsoft.AspNetCore.Authorization
+@inject IUserService svc
+
+@* attribute [Authorize]*@
+
+<h3>Gebruikers</h3>
+
+@if (IsLoading)
+{
+	<div class="d-flex justify-content-center my-4">
+		<div class="spinner-border text-primary" role="status">
+			<span class="visually-hidden">Laden...</span>
+		</div>
+	</div>
+}
+else if (Users == null || Users.Count == 0)
+{
+	<p>Geen gebruikers gevonden.</p>
+}
+else
+{
+	<div class="d-flex justify-content-end mb-2">
+		<PageSizeSelector PageSize="@PageSize" OnPageSizeChanged="ChangePageSize" />
+		<button class="btn btn-ternary text-secondary border" @onclick="ShowAddModal">
+			<i class="bi bi-plus-lg">Gebruiker toevoegen</i>
+		</button>
+	</div>	
+	<table class="table table-bordered table-layout-fixed">
+		<thead>
+			<tr>
+				<SortableHeader SortColumn="name" CurrentSortBy="@SortBy" SortAscending="@SortAscending" OnSortChanged="HandleSortChanged">
+					Email
+				</SortableHeader>
+				<th class="text-nowrap" style="width: 1%;"></th>
+			</tr>
+		</thead>
+		<tbody>
+			@foreach (var user in Users)
+			{
+				<tr>
+					<td class="w-100">@user.Email</td>
+					<td class="text-nowrap">
+						<button class="btn btn-ternary text-secondary border me-2" @onclick="() => ShowEditModal(user.Id)">
+							<i class="bi bi-pencil-square"></i> Bewerken
+						</button>
+
+						<button class="btn btn-ternary text-secondary border me-2" @onclick="() => ShowEditPasswordModal(user.Id)">
+							<i class="bi bi-pencil-square"></i> Verander paswoord
+						</button>
+
+						<button class="btn btn-danger" @onclick="() => ShowDeleteConfirmation(user.Id)">
+							<i class="bi bi-trash"></i> Verwijderen
+						</button>
+					</td>
+				</tr>
+			}
+		</tbody>
+	</table>
+
+
+	<Pagination CurrentPage="@CurrentPage" TotalPages="@TotalPages" OnPageChanged="ChangePage" />
+
+}
+
+
+@*Nieuwe gebruiker toevoegen modal*@
+
+@if (_showAddModal)
+{
+	<EditForm Model="@newUser" OnValidSubmit="SaveUser">
+		<DataAnnotationsValidator />
+		<ValidationSummary />
+		<div class="modal fade show d-block" tabindex="-1">
+			<div class="modal-dialog">
+				<div class="modal-content">
+					<div class="modal-header">
+						<h5 class="modal-title">Nieuwe gebruiker toevoegen</h5>
+						<button type="button" class="btn-close" @onclick="HideAddModal"></button>
+					</div>
+					<div class="modal-body">
+						<div class="mb-3">
+							<label class="form-label">Email</label>
+							<InputText class="form-control" @bind-Value="newUser.Email" />
+							<ValidationMessage For="@(() => newUser.Email)" />
+						</div>
+
+						<div class="mb-3">
+							<label class="form-label">Wachtwoord</label>
+							<InputText @bind-Value="@newUser.Password" class="form-control" type="password" />
+							<ValidationMessage For="@(() => @newUser.Password)" />
+						</div>
+
+						<div class="mb-3">
+							<label class="form-label">Bevestig wachtwoord</label>
+							<InputText @bind-Value="@newUser.ConfirmPassword" class="form-control" type="password" />
+							<ValidationMessage For="@(() => @newUser.ConfirmPassword)" />
+						</div>
+					</div>
+
+					<div class="modal-footer">
+						<button type="button" class="btn btn-secondary" @onclick="HideAddModal" disabled="@IsSaving">Annuleren</button>
+						<button type="submit" class="btn btn-primary" disabled="@IsSaving">
+							@if (IsSaving)
+							{
+								<span class="spinner-border spinner-border-sm me-2"></span>
+							}
+							Opslaan
+						</button>
+					</div>
+				</div>
+			</div>
+		</div>
+		<div class="modal-backdrop fade show"></div>
+	</EditForm>
+}
+
+
+@if (_showEditModal)
+{
+	<EditForm Model="@editUser" OnValidSubmit="EditUser">
+		<DataAnnotationsValidator />
+		<ValidationSummary />
+		<div class="modal fade show d-block" tabindex="-1">
+			<div class="modal-dialog">
+				<div class="modal-content">
+					<div class="modal-header">
+						<h5 class="modal-title">Gebruikersgegevens aanpassen</h5>
+						<button type="button" class="btn-close" @onclick="HideEditModal"></button>
+					</div>
+					<div class="modal-body">
+						<div class="mb-3">
+							<label class="form-label">Email</label>
+							<InputText class="form-control" @bind-Value="editUser.Email" />
+							<ValidationMessage For="@(() => editUser.Email)" />
+						</div>
+					</div>
+
+					<div class="modal-footer">
+						<button type="button" class="btn btn-secondary" @onclick="HideEditModal" disabled="@IsSaving">Annuleren</button>
+						<button type="submit" class="btn btn-primary" disabled="@IsSaving">
+							@if (IsSaving)
+							{
+								<span class="spinner-border spinner-border-sm me-2"></span>
+							}
+							Opslaan
+						</button>
+					</div>
+				</div>
+			</div>
+		</div>
+		<div class="modal-backdrop fade show"></div>
+	</EditForm>
+}
+
+
+@if (_showChangePasswordModal)
+{
+	<EditForm Model="@editPassword" OnValidSubmit="EditPassword">
+		<DataAnnotationsValidator />
+		<ValidationSummary />
+		<div class="modal fade show d-block" tabindex="-1">
+			<div class="modal-dialog">
+				<div class="modal-content">
+					<div class="modal-header">
+						<h5 class="modal-title">Wachtwoord aanpassen</h5>
+						<button type="button" class="btn-close" @onclick="HideEditPasswordModal"></button>
+					</div>
+					<div class="modal-body">
+						<div class="mb-3">
+							<label class="form-label">Wachtwoord</label>
+							<InputText @bind-Value="@editPassword.Password" class="form-control" type="password" />
+							<ValidationMessage For="@(() => @editPassword.Password)" />
+						</div>
+
+						<div class="mb-3">
+							<label class="form-label">Bevestig wachtwoord</label>
+							<InputText @bind-Value="@editPassword.ConfirmPassword" class="form-control" type="password" />
+							<ValidationMessage For="@(() => @editPassword.ConfirmPassword)" />
+						</div>
+					</div>
+
+					<div class="modal-footer">
+						<button type="button" class="btn btn-secondary" @onclick="HideEditPasswordModal" disabled="@IsSaving">Annuleren</button>
+						<button type="submit" class="btn btn-primary" disabled="@IsSaving">
+							@if (IsSaving)
+							{
+								<span class="spinner-border spinner-border-sm me-2"></span>
+							}
+							Opslaan
+						</button>
+					</div>
+				</div>
+			</div>
+		</div>
+		<div class="modal-backdrop fade show"></div>
+	</EditForm>
+}
+
+@* Delete Confirmation *@
+@if (ShowDeleteDialog)
+{
+	<div class="modal fade show d-block" tabindex="-1">
+		<div class="modal-dialog">
+			<div class="modal-content">
+				<div class="modal-header">
+					<h5 class="modal-title">Bevestig verwijderen</h5>
+					<button type="button" class="btn-close" @onclick="HideDeleteDialog"></button>
+				</div>
+				<div class="modal-body">
+					<p>Weet je zeker dat je deze gebruiker wilt verwijderen?</p>
+				</div>
+				<div class="modal-footer">
+					<button class="btn btn-secondary" @onclick="HideDeleteDialog">Annuleren</button>
+					<button class="btn btn-danger" @onclick="DeleteUser">Verwijderen</button>
+				</div>
+			</div>
+		</div>
+	</div>
+	<div class="modal-backdrop fade show"></div>
+}
+
+
+
+@code {
+
+	public List<UserViewModel> Users { get; set; } = new List<UserViewModel>();
+	public bool IsLoading { get; set; } = true;
+
+	private bool _showDeleteModal = false;
+
+	private bool IsSaving = false;
+
+	protected override async Task OnInitializedAsync()
+	{
+		await LoadUserData();
+	}
+
+	private async Task LoadUserData()
+	{
+		IsLoading = true;
+		Users = new List<UserViewModel>();
+		var result = await svc.GetPagedAsync(CurrentPage, PageSize, SortBy, SortAscending);
+		result.Items.ForEach(u => Users.Add(new UserViewModel { Email = u.UserName, Id = u.Id }));
+		TotalCustomers = result.TotalCount;
+		TotalPages = (int)Math.Ceiling((double)TotalCustomers / PageSize);
+		IsLoading = false;
+	}
+
+	//PAGINATION
+	private int CurrentPage = 1;
+	private int PageSize = 10;
+	private int TotalPages = 1;
+	private int TotalCustomers = 0;
+
+	private async Task ChangePage(int page)
+	{
+		if (page < 1 || page > TotalPages) return;
+		CurrentPage = page;
+		await LoadUserData();
+	}
+
+	private async Task ChangePageSize(int size)
+	{
+		if (PageSize != size)
+		{
+			PageSize = size;
+			CurrentPage = 1;
+			await LoadUserData();
+		}
+	}
+
+	// Sorting
+	private string SortBy = "name";
+	private bool SortAscending = true;
+
+	private async Task HandleSortChanged((string Column, bool Ascending) sort)
+	{
+		SortBy = sort.Column;
+		SortAscending = sort.Ascending;
+		CurrentPage = 1;
+		await LoadUserData();
+	}
+
+	//GEBRUIKER TOEVOEGEN
+
+	private bool _showAddModal = false;
+	private AddUserViewModel newUser = new();
+
+	private void ShowAddModal()
+	{
+		_showAddModal = true;
+		newUser = new AddUserViewModel(); // Reset for new user
+	}
+
+	private void HideAddModal() => _showAddModal = false;
+
+	private async Task SaveUser()
+	{
+		IsSaving = true;
+		try
+		{
+			var result = await svc.AddAsync(newUser.Email, newUser.Password); // Use a strong password
+			if (result.Succeeded)
+			{
+				// Optionally, you can add the new user to the Users list
+				//Users.Add(new UserViewModel { Email = editUser.Email });
+				ToastService.ShowSuccess("Gebruiker succesvol toegevoegd!"); // Show success message
+			}
+			else
+			{
+				foreach (var error in result.Errors)
+				{
+					ToastService.ShowError(error.Description); // Show error messages
+				}
+			}
+			await LoadUserData(); // Refresh the list after saving
+			HideAddModal();
+		}
+		finally
+		{
+			IsSaving = false;
+		}
+	}
+
+	//GEBRUIKER AANPASSEN
+	private string selectedUserId = "";
+	private bool _showEditModal = false;
+	private EditUserViewModel editUser = new();
+	private string oldEmail = "";
+	private void HideEditModal() => _showEditModal = false;
+
+	private void ShowEditModal(string id)
+	{
+		_showEditModal = true;
+		selectedUserId = id;
+		var user = Users.FirstOrDefault(u => u.Id == selectedUserId);
+		if (user != null)
+		{
+			editUser = new EditUserViewModel { Email = user.Email, Id = user.Id, };   // Populate other fields as needed
+			oldEmail = user.Email;
+		}
+	}
+
+	private async Task EditUser()
+	{
+		if (editUser.Email == oldEmail) { }  //niets doen als email niet verandert is
+		else
+		{
+			IsSaving = true;
+			try
+			{
+				var result = await svc.UpdateAsync(editUser.Id, editUser.Email); // Update user details
+				if (result.Succeeded)
+				{
+					ToastService.ShowSuccess("Gebruiker succesvol aangepast!"); // Show success message
+					await LoadUserData(); // Refresh the list after saving
+				}
+				else
+				{
+					ToastService.ShowError("Fout bij het aanpassen van de gebruiker.");
+				}
+			}
+			catch (Exception ex)
+			{
+				ToastService.ShowError($"Er is een fout opgetreden: {ex.Message}");
+			}
+			finally
+			{
+				IsSaving = false;
+			}
+		}
+		HideEditModal();
+	}
+
+	//PASWOORD AANPASSEN
+	private bool _showChangePasswordModal = false;
+	private EditPasswordViewModel editPassword = new();
+	private void HideEditPasswordModal() => _showChangePasswordModal = false;
+
+	private void ShowEditPasswordModal(string id)
+	{
+		_showChangePasswordModal = true;
+		var user = Users.FirstOrDefault(u => u.Id == id);
+		if (user != null)
+		{
+			editPassword = new EditPasswordViewModel { Id = user.Id, };
+		}
+	}
+
+	private async Task EditPassword()
+	{
+		IsSaving = true;
+		try
+		{
+			var result = await svc.UpdatePasswordAsync(editPassword.Id, editPassword.Password);
+			if (result.Succeeded)
+			{
+				ToastService.ShowSuccess("Wachtwoord aangepast!"); // Show success message
+				await LoadUserData(); // Refresh the list after saving
+			}
+			else
+			{
+				ToastService.ShowError("Fout bij het aanpassen van het wachtwoord.");
+			}
+		}
+		catch (Exception ex)
+		{
+			ToastService.ShowError($"Er is een fout opgetreden: {ex.Message}");
+		}
+		finally
+		{
+			IsSaving = false;
+		}
+
+		HideEditPasswordModal();
+	}
+
+
+
+	//GEBRUIKER VERWIJDEREN
+
+	private bool ShowDeleteDialog = false;
+	private string userToDeleteId = "";
+	private void HideDeleteDialog() => ShowDeleteDialog = false;
+
+	private void ShowDeleteConfirmation(string id)
+	{
+		ShowDeleteDialog = true;
+		userToDeleteId = id;
+	}
+
+	private async Task DeleteUser()
+	{
+		IsSaving = true;
+		try
+		{
+			var result = await svc.DeleteByIdAsync(userToDeleteId);
+			if (result.Succeeded)
+			{
+				ToastService.ShowSuccess("Gebruiker verwijderd!"); // Show success message
+				await LoadUserData(); // Refresh the list after saving
+			}
+			else
+			{
+				ToastService.ShowError("Fout bij verwijderen gebruiker.");
+			}
+		}
+		catch (Exception ex)
+		{
+			ToastService.ShowError($"Er is een fout opgetreden: {ex.Message}");
+		}
+		finally
+		{
+			IsSaving = false;
+		}
+
+		HideDeleteDialog();
+	}
+
+}
