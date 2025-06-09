@@ -2,10 +2,10 @@
 @inject ICustomerService svc
 @inject NavigationManager NavigationManager
 @inject IToastService ToastService
+@inject AuthenticationStateProvider AuthenticationStateProvider
 @using Microsoft.AspNetCore.Authorization
 @using Stockify.Web.ViewModels
 @using Stockify.Web.Components.Shared
-
 @attribute [Authorize]
 
 <h3>Klantdetails</h3>
@@ -28,8 +28,8 @@ else
 		<div class="card-body">
 			<h5 class="card-title">@Customer.Name</h5>
 			<p class="card-text">@Customer.Street, @Customer.ZipCode @Customer.City</p>
-			<button class="btn btn-primary me-2" @onclick="ShowEditModal"><i class="bi bi-pencil-square"></i> Bewerken</button>
-			<button class="btn btn-danger" @onclick="ShowDeleteConfirmation"><i class="bi bi-trash"></i> Verwijderen</button>
+			<button class="btn btn-primary me-2" @onclick="ShowEditModal"><i class="bi bi-pencil-square"></i>Bijwerken</button>
+			<button class="btn btn-danger" @onclick="ShowDeleteConfirmation"><i class="bi bi-trash"></i>Verwijderen</button>
 		</div>
 	</div>
 }
@@ -95,10 +95,20 @@ else
 	private bool IsLoading = true;
 	private bool ShowEdit = false;
 	private bool ShowDeleteDialog = false;
+	private string? currentUserId;
 
 	protected override async Task OnInitializedAsync()
 	{
 		await LoadCustomer();
+		var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+		var user = authState.User;
+
+		if (user.Identity?.IsAuthenticated ?? false)
+		{
+			currentUserId = user.FindFirst(c => c.Type == "sub")?.Value // OpenID Connect "sub" claim
+						?? user.FindFirst(c => c.Type == ClaimTypes.NameIdentifier)?.Value; // fallback
+		}
+
 	}
 
 	private async Task LoadCustomer()
@@ -133,10 +143,10 @@ else
 		Customer.ZipCode = EditModel.Zipcode;
 		Customer.City = EditModel.City;
 
-		await svc.UpdateAsync(Customer);
+		await svc.UpdateAsync(Customer, currentUserId);
 		ShowEdit = false;
 		await LoadCustomer();
-		ToastService.ShowSuccess("Klant succesvol aangepast.");
+		ToastService.ShowSuccess($"Klant succesvol aangepast door {currentUserId}");
 	}
 
 	private async Task DeleteCustomer()

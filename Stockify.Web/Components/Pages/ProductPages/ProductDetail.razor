@@ -3,6 +3,7 @@
 @inject IStockActionService stockActionSvc
 @inject NavigationManager NavigationManager
 @inject IToastService ToastService
+@inject AuthenticationStateProvider AuthenticationStateProvider
 @using Microsoft.AspNetCore.Authorization
 @using Stockify.Web.ViewModels
 @using Stockify.Web.Components.Shared
@@ -214,6 +215,7 @@ else
 	private Product? Product;
 	private ProductInputModel EditModel = new();
 	private bool IsLoading = true;
+	private string? currentUserId;
 	private bool ShowEdit = false;
 	private bool ShowDeleteDialog = false;
 	private StockActionType _selectedType;
@@ -222,6 +224,14 @@ else
 	{
 		await LoadProduct();
 		await LoadStockActions();
+		var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+		var user = authState.User;
+
+		if (user.Identity?.IsAuthenticated ?? false)
+		{
+			currentUserId = user.FindFirst(c => c.Type == "sub")?.Value // OpenID Connect "sub" claim
+						?? user.FindFirst(c => c.Type == ClaimTypes.NameIdentifier)?.Value; // fallback
+		}
 	}
 
 	private async Task LoadProduct()
@@ -252,7 +262,7 @@ else
 		Product.Name = EditModel.Name;
 		Product.SerialNumber = EditModel.SerialNumber;
 
-		await productSvc.UpdateAsync(Product);
+		await productSvc.UpdateAsync(Product, currentUserId);
 		ShowEdit = false;
 		await LoadProduct();
 		ToastService.ShowSuccess("Product aangepast.");

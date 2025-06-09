@@ -16,8 +16,9 @@ public static class DependencyInjection
         services.AddScoped<IOrderActionService, OrderActionService>();
         services.AddScoped<IStockActionService, StockActionService>();
         services.AddScoped<IProductService, ProductService>();
-        services.AddScoped<IUserService, UserService>();
+        services.AddScoped<IUserService, UserService>();        
         services.AddSingleton<IToastService, ToastService>();
+
         return services;
     }
 }

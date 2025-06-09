@@ -20,6 +20,7 @@ public class StockActionService : IStockActionService
 
     public async Task<StockAction?> GetByIdAsync(int id) => await _context.StockActions.Include(sa => sa.Product).Include(sa => sa.OrderLine).FirstOrDefaultAsync(sa => sa.Id == id);
 
+    public async Task<StockAction?> GetByOrderLineIdAsync(int id) => await _context.StockActions.FirstOrDefaultAsync(sa => sa.OrderLineId == id);
     public async Task AddAsync(StockAction action)
     {
         _context.StockActions.Add(action);

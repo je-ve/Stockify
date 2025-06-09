@@ -4,7 +4,8 @@
 @using Microsoft.AspNetCore.Authorization
 @using Stockify.Web.ViewModels
 @using Stockify.Web.Components.Shared
-
+@using Stockify.Extensions
+@inject AuthenticationStateProvider AuthenticationStateProvider
 @attribute [Authorize]
 
 <h3>Klanten</h3>
@@ -30,7 +31,7 @@ else
 		</button>
 	</div>
 
-	<table class="table table-bordered">
+	<table class="table table-bordered small">
 		<thead>
 			<tr>
 				<th></th>
@@ -40,7 +41,18 @@ else
 				<SortableHeader SortColumn="city" CurrentSortBy="@SortBy" SortAscending="@SortAscending" OnSortChanged="HandleSortChanged">
 					Adres
 				</SortableHeader>
-				<!-- add other headers -->
+				<SortableHeader SortColumn="createdby" CurrentSortBy="@SortBy" SortAscending="@SortAscending" OnSortChanged="HandleSortChanged">
+					Aangemaakt door
+				</SortableHeader>
+				<SortableHeader SortColumn="createdat" CurrentSortBy="@SortBy" SortAscending="@SortAscending" OnSortChanged="HandleSortChanged">
+					Aangemaakt op
+				</SortableHeader>
+				<SortableHeader SortColumn="updatedby" CurrentSortBy="@SortBy" SortAscending="@SortAscending" OnSortChanged="HandleSortChanged">
+					Bijgewerkt door
+				</SortableHeader>
+				<SortableHeader SortColumn="updatedat" CurrentSortBy="@SortBy" SortAscending="@SortAscending" OnSortChanged="HandleSortChanged">
+					Bijgewerkt op
+				</SortableHeader>
 			</tr>
 		</thead>
 		<tbody>
@@ -50,6 +62,10 @@ else
 					<td><a href="customer/@customer.Id">@customer.Number</a></td>
 					<td>@customer.Name</td>
 					<td>@customer.Address</td>
+					<td>@customer?.CreatedBy?.Id</td>
+					<td>@customer.CreatedAt.ToBelgianFormat()</td>
+					<td>@customer?.UpdatedBy?.UserName</td>
+					<td>@customer.UpdatedAt.ToBelgianFormat()</td>
 				</tr>
 			}
 		</tbody>
@@ -112,6 +128,7 @@ else
 @code {
 	public List<Customer> Customers { get; set; } = new();
 	public bool IsLoading { get; set; } = true;
+	private string? currentUserId;
 	private bool _showModal = false;
 	private bool IsSaving = false;
 	private CustomerInputModel NewCustomer = new();
@@ -119,6 +136,14 @@ else
 	protected override async Task OnInitializedAsync()
 	{
 		await LoadCustomersData();
+		var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+		var user = authState.User;
+
+		if (user.Identity?.IsAuthenticated ?? false)
+		{
+			currentUserId = user.FindFirst(c => c.Type == "sub")?.Value // OpenID Connect "sub" claim
+						?? user.FindFirst(c => c.Type == ClaimTypes.NameIdentifier)?.Value; // fallback
+		}
 	}
 
 	private async Task LoadCustomersData()
@@ -147,7 +172,7 @@ else
 					City = NewCustomer.City
 				};
 
-			await svc.AddAsync(customer);
+			await svc.AddAsync(customer, currentUserId);
 			await LoadCustomersData();
 			ToastService.ShowSuccess("Klant succesvol toegevoegd.");
 			HideModal();

@@ -9,21 +9,23 @@ public class OrderService : IOrderService
 {
     private readonly StockifyContext _context;
     private readonly IStockActionService stockActionService;
-    public OrderService(StockifyContext context, IStockActionService stockActionService)
-    {
+    private readonly IProductService productService;
+    public OrderService(StockifyContext context, IStockActionService stockActionService, IProductService productService)
+    {   
         _context = context;
         this.stockActionService = stockActionService;
+        this.productService = productService;
     }
 
     public async Task<List<Order>> GetAllAsync() => await _context.Orders
         .Include(o => o.Customer)
         .Include(o => o.OrderLines)
-        .Include(o => o.Actions)
+      //  .Include(o => o.Actions)
         .ToListAsync();
 
     public async Task<Order?> GetByIdAsync(int id) => await _context.Orders.Include(o => o.Customer)
         .Include(o => o.OrderLines)
-        .Include(o => o.Actions)
+       // .Include(o => o.Actions)
         .FirstOrDefaultAsync(o => o.Id == id);
 
     public async Task<Order?> GetByIdAsyncAsNoTracking(int id) => await _context.Orders
@@ -32,20 +34,29 @@ public class OrderService : IOrderService
     .FirstOrDefaultAsync(o => o.Id == id);
 
 
-    public async Task<Order> AddAsync(Order order)
+    public async Task<Order> AddAsync(Order order, string currentUserId)
     {
+        order.CreatedAt = DateTime.UtcNow;
+        order.CreatedById = currentUserId;
+        order.UpdatedAt = DateTime.UtcNow;
+        order.UpdatedById = currentUserId;
+
         _context.Orders.Add(order);        
         await _context.SaveChangesAsync();
         await stockActionService.AddReservations(order.OrderLines.ToList());
         return order;
     }
 
-    public async Task UpdateAsync(Order order)
+    public async Task UpdateAsync(Order order, string currentUserId)
     {
-        if (order.Status != OrderStatus.Created)
+      /*  if (order.Status != OrderStatus.Created)
         {
             throw new InvalidOperationException("Enkel nieuwe bestellingen kunnen aangepast worden.");
         }
+      */
+        order.UpdatedAt = DateTime.UtcNow;
+        order.UpdatedById = currentUserId;
+
         _context.Orders.Update(order);
         await stockActionService.UpdateReservations(order);
         await _context.SaveChangesAsync();
@@ -55,13 +66,56 @@ public class OrderService : IOrderService
     //TODO//
     public async Task DeleteAsync(Order order)
     {
-        if (order.Status != OrderStatus.Created)
+        /*   if (order.Status != OrderStatus.Created)
+           {
+               throw new InvalidOperationException("Enkel nieuwe bestellingen kunnen verwijderd worden.");
+           }
+        */
+
+        // throw new InvalidOperationException("In deleteasync");
+        /*
+
+         foreach (var line in order.OrderLines.ToList())
+         {
+             var stockActions = await _context.StockActions.Where(sa => sa.OrderLineId == line.Id).ToListAsync();
+
+             foreach (var action in stockActions)
+             {
+                 _context.StockActions.Remove(action);
+                 await productService.RecalculateStock(action.ProductId);
+             }
+
+             //Orderlines zelf verwijderen
+             _context.OrderLines.Remove(line);
+         }
+
+         _context.Orders.Remove(order);
+         await _context.SaveChangesAsync();
+        */
+
+        foreach (var line in order.OrderLines.ToList())
         {
-            throw new InvalidOperationException("Enkel nieuwe bestellingen kunnen verwijderd worden.");
+            // First remove all related StockActions
+            var stockActions = await _context.StockActions.Where(sa => sa.OrderLineId == line.Id).ToListAsync();
+
+            foreach (var action in stockActions)
+            {
+                _context.StockActions.Remove(action);
+                await productService.RecalculateStock(action.ProductId);
+            }
         }
-        _context.Orders.Remove(order);
-        await stockActionService.DeleteReservations(order.OrderLines.ToList());
+
+        // Save now to enforce referential integrity BEFORE deleting OrderLines
         await _context.SaveChangesAsync();
+
+        //throw new InvalidOperationException("Na loop");
+        foreach (var line in order.OrderLines)
+        {
+            _context.OrderLines.Remove(line);
+        }        
+        _context.Orders.Remove(order);
+        await _context.SaveChangesAsync();
+
     }
 
     public async Task DeleteAsync(int id)
@@ -72,7 +126,7 @@ public class OrderService : IOrderService
 
     public async Task<PaginatedResult<Order>> GetPagedAsync(int pageNumber, int pageSize, string sortBy, bool ascending)
     {
-        var query = _context.Orders.Include(o => o.Customer).AsQueryable();
+        var query = _context.Orders.Include(o => o.Customer).Include(c => c.UpdatedBy).AsQueryable();
 
         // Apply sorting
         query = (sortBy.ToLower(), ascending) switch
@@ -81,6 +135,14 @@ public class OrderService : IOrderService
             ("customernumber", false) => query.OrderByDescending(c => c.Customer.Id),
             ("customername", true) => query.OrderBy(c => c.Customer.Name),
             ("customername", false) => query.OrderByDescending(c => c.Customer.Name),
+            ("createdby", true) => query.OrderBy(c => c.CreatedBy.UserName),
+            ("createdby", false) => query.OrderByDescending(c => c.CreatedBy.UserName),
+            ("createdat", true) => query.OrderBy(c => c.CreatedAt),
+            ("createdat", false) => query.OrderByDescending(c => c.CreatedAt),
+            ("updatedby", true) => query.OrderBy(c => c.UpdatedBy.UserName),
+            ("updatedby", false) => query.OrderByDescending(c => c.UpdatedBy.UserName),
+            ("updatedat", true) => query.OrderBy(c => c.UpdatedAt),
+            ("updatedat", false) => query.OrderByDescending(c => c.UpdatedAt),
             _ => query.OrderBy(c => c.Id) // default
         };
 

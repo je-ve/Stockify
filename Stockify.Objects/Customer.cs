@@ -29,6 +29,19 @@ public class Customer
     [RegularExpression(@"^\d{4}$", ErrorMessage = "De postcode heeft niet juiste vorm.")]
     public string ZipCode { get; set; }
 
+    public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+
+    public string? CreatedById { get; set; }
+
+    [ForeignKey(nameof(CreatedById))]
+    public ApplicationUser? CreatedBy { get; set; }
+    public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
+
+    public string? UpdatedById { get; set; }
+    
+    [ForeignKey(nameof(UpdatedById))]
+    public ApplicationUser? UpdatedBy { get; set; }
+
     [NotMapped]
     public string Address { get { return $"{Street}, {ZipCode} {City}"; } }
 }

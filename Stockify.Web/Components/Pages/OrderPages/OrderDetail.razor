@@ -6,7 +6,7 @@
 @inject IProductService ProductService
 @inject NavigationManager NavigationManager
 @inject IToastService ToastService
-
+@inject AuthenticationStateProvider AuthenticationStateProvider
 @attribute [Authorize]
 
 <h3 class="d-flex justify-content-between align-items-center">
@@ -76,7 +76,7 @@ else
 			<div class="modal-backdrop fade show"></div>
 		</EditForm>
 	}
-	
+
 	@****************@
 	@***ORDERLINES***@
 	@****************@
@@ -96,7 +96,6 @@ else
 				<i class="bi bi-plus-lg"> Voeg product toe</i>
 			</button>
 		</div>
-
 
 		@*Table*@
 
@@ -238,6 +237,7 @@ else
 	private bool showEditLineModal = false;
 	private bool showOrderLines => id != 0 || (order != null && order.Customer != null);
 	private bool isEditable = true;
+	private string? currentUserId;
 
 	bool isNewOrder => id == 0;
 	bool isLoading = true;
@@ -259,6 +259,15 @@ else
 		customers = await CustomerService.GetAllAsync();
 		products = await ProductService.GetAllAsync();
 
+		var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+		var user = authState.User;
+
+		if (user.Identity?.IsAuthenticated ?? false)
+		{
+			currentUserId = user.FindFirst(c => c.Type == "sub")?.Value // OpenID Connect "sub" claim
+						?? user.FindFirst(c => c.Type == ClaimTypes.NameIdentifier)?.Value; // fallback
+		}
+
 		//order initialiseren
 		if (isNewOrder) order = new Order();
 		else
@@ -271,6 +280,7 @@ else
 				return;
 			}
 		}
+
 		isLoading = false;
 	}
 
@@ -310,7 +320,7 @@ else
 			if (id > 0)
 			{
 				isSaving = true;
-				await OrderService.UpdateAsync(order);
+				await OrderService.UpdateAsync(order, currentUserId);
 				products = await ProductService.GetAllAsync();
 				isSaving = false;
 				ToastService.ShowSuccess("Klant bijgewerkt");
@@ -415,7 +425,7 @@ else
 				order.OrderLines.Add(new OrderLine { ProductId = orderLineInputModel.ProductId, Quantity = orderLineInputModel.Quantity });
 				isSaving = true;
 				products = await ProductService.GetAllAsync();
-				var result = await OrderService.AddAsync(order);
+				var result = await OrderService.AddAsync(order, currentUserId);
 				isSaving = false;
 				ToastService.ShowSuccess("Bestelling toegevoegd");
 				NavigationManager.NavigateTo($"/order/{result.Id}");
@@ -471,7 +481,7 @@ else
 					existingLine.Quantity = orderLineInputModel.Quantity;
 					isSaving = true;
 					ToastService.ShowSuccess("Bestelling aan het bijwerken");
-					await OrderLineService.UpdateAsync(existingLine);
+					await OrderLineService.UpdateAsync(existingLine, currentUserId);
 					products = await ProductService.GetAllAsync();
 					isSaving = false;
 					//ToastService.ShowSuccess("Bestelling bijgewerkt");
@@ -496,7 +506,7 @@ else
 		{
 			// Voeg de nieuwe hoeveelheid toe aan de bestaande regel
 			existingLine.Quantity += orderLineInputModel.Quantity;
-			await OrderLineService.UpdateAsync(existingLine);
+			await OrderLineService.UpdateAsync(existingLine, currentUserId);
 		}
 	}
 
@@ -504,7 +514,7 @@ else
 	{
 		OrderLine newOrderLine = new OrderLine { ProductId = orderLineInputModel.ProductId, Quantity = orderLineInputModel.Quantity };
 		newOrderLine.OrderId = order.Id;
-		await OrderLineService.AddAsync(newOrderLine);
+		await OrderLineService.AddAsync(newOrderLine, currentUserId);
 	}
 
 	////////////////////

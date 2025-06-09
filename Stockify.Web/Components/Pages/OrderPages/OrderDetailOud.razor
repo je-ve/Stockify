@@ -1,4 +1,6 @@
-﻿@page "/xorder/{Id:int}"
+﻿@* 
+
+@page "/xorder/{Id:int}"
 @inject IOrderService OrderService
 @inject ICustomerService CustomerService
 @inject IProductService ProductService
@@ -25,7 +27,7 @@ else
 {
 
 
-	@*Header*@
+	@*Header
 
 	<div class="card mb-3">
 		<div class="card-body">
@@ -36,7 +38,7 @@ else
 		</div>
 	</div>
 
-	@*Edit header model*@
+	@*Edit header model
 	@if (ShowEditHeader)
 	{
 		<EditForm Model="OrderModel" OnValidSubmit="UpdateOrderHeaderFromModal">
@@ -69,7 +71,7 @@ else
 		</EditForm>
 	}
 
-	@*Orderlijnen*@
+	@*Orderlijnen
 
 	<h3>Orderlijnen</h3>
 	<div class="mb-2">
@@ -80,7 +82,7 @@ else
 
 	@*
     <button class="btn btn-secondary mb-2" @onclick="ShowOrderLineModal" disabled="!IsEditable">+ Orderlijn toevoegen</button>
-*@
+
 
 	@if (OrderModel == null || OrderModel.OrderLines.Count == 0)
 	{
@@ -105,7 +107,7 @@ else
 						<td>
 
 							<button class="btn btn-sm btn-outline-primary me-1" @onclick="() => ShowOrderLineModal(line)" disabled="@(!IsEditable)">Bewerk</button>
-							@*	<button class="btn btn-sm btn-outline-danger" @onclick="() => ConfirmRemoveOrderLine(line)" disabled="!IsEditable">Verwijder</button> *@
+							@*	<button class="btn btn-sm btn-outline-danger" @onclick="() => ConfirmRemoveOrderLine(line)" disabled="!IsEditable">Verwijder</button> 
 
 						</td>
 					</tr>
@@ -118,7 +120,7 @@ else
 	{
 		<EditForm Model="@currentLine" OnValidSubmit="UpdateOrderLineFromModal">
 			<DataAnnotationsValidator />
-			@*<ValidationSummary /> *@
+			@*<ValidationSummary /> 
 			<div class="modal fade show d-block" tabindex="-1">
 				<div class="modal-dialog">
 					<div class="modal-content">
@@ -262,7 +264,7 @@ else
 	{
 		Console.WriteLine("SaveOrder");
 		var newOrder = OrderModel.ToEntity(); // from input model to Order
-		var result = await OrderService.AddAsync(newOrder);
+		var result = await OrderService.AddAsync(newOrder, currentUserId);
 		ToastService.ShowSuccess("Order aangemaakt.");
 		NavigationManager.NavigateTo($"/order/{result.Id}");
 	}
@@ -286,4 +288,4 @@ else
 		ToastService.ShowSuccess("Order verwijderd.");
 		NavigationManager.NavigateTo("/orders");
 	}
-}
+} *@ 

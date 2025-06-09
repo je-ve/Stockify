@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Stockify.Data;
 
@@ -11,9 +12,11 @@ using Stockify.Data;
 namespace Stockify.Data.Migrations
 {
     [DbContext(typeof(StockifyContext))]
-    partial class StockifyContextModelSnapshot : ModelSnapshot
+    [Migration("20250607181837_AddProductAndOrderAuditFieldsNullable")]
+    partial class AddProductAndOrderAuditFieldsNullable
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -272,100 +275,100 @@ namespace Stockify.Data.Migrations
                         {
                             Id = 1,
                             City = "Antwerpen",
-                            CreatedAt = new DateTime(2025, 6, 9, 8, 39, 8, 662, DateTimeKind.Utc).AddTicks(653),
+                            CreatedAt = new DateTime(2025, 6, 7, 18, 18, 37, 561, DateTimeKind.Utc).AddTicks(2558),
                             Name = "Liesbeth Peeters",
                             Street = "Meir",
-                            UpdatedAt = new DateTime(2025, 6, 9, 8, 39, 8, 662, DateTimeKind.Utc).AddTicks(656),
+                            UpdatedAt = new DateTime(2025, 6, 7, 18, 18, 37, 561, DateTimeKind.Utc).AddTicks(2560),
                             ZipCode = "2000"
                         },
                         new
                         {
                             Id = 2,
                             City = "Gent",
-                            CreatedAt = new DateTime(2025, 6, 9, 8, 39, 8, 662, DateTimeKind.Utc).AddTicks(661),
+                            CreatedAt = new DateTime(2025, 6, 7, 18, 18, 37, 561, DateTimeKind.Utc).AddTicks(2563),
                             Name = "Tom De Smet",
                             Street = "Veldstraat",
-                            UpdatedAt = new DateTime(2025, 6, 9, 8, 39, 8, 662, DateTimeKind.Utc).AddTicks(661),
+                            UpdatedAt = new DateTime(2025, 6, 7, 18, 18, 37, 561, DateTimeKind.Utc).AddTicks(2563),
                             ZipCode = "9000"
                         },
                         new
                         {
                             Id = 3,
                             City = "Brugge",
-                            CreatedAt = new DateTime(2025, 6, 9, 8, 39, 8, 662, DateTimeKind.Utc).AddTicks(663),
+                            CreatedAt = new DateTime(2025, 6, 7, 18, 18, 37, 561, DateTimeKind.Utc).AddTicks(2565),
                             Name = "Sofie Maes",
                             Street = "Zuidzandstraat",
-                            UpdatedAt = new DateTime(2025, 6, 9, 8, 39, 8, 662, DateTimeKind.Utc).AddTicks(664),
+                            UpdatedAt = new DateTime(2025, 6, 7, 18, 18, 37, 561, DateTimeKind.Utc).AddTicks(2565),
                             ZipCode = "8000"
                         },
                         new
                         {
                             Id = 4,
                             City = "Leuven",
-                            CreatedAt = new DateTime(2025, 6, 9, 8, 39, 8, 662, DateTimeKind.Utc).AddTicks(666),
+                            CreatedAt = new DateTime(2025, 6, 7, 18, 18, 37, 561, DateTimeKind.Utc).AddTicks(2566),
                             Name = "Bram Janssens",
                             Street = "Bondgenotenlaan",
-                            UpdatedAt = new DateTime(2025, 6, 9, 8, 39, 8, 662, DateTimeKind.Utc).AddTicks(666),
+                            UpdatedAt = new DateTime(2025, 6, 7, 18, 18, 37, 561, DateTimeKind.Utc).AddTicks(2567),
                             ZipCode = "3000"
                         },
                         new
                         {
                             Id = 5,
                             City = "Mechelen",
-                            CreatedAt = new DateTime(2025, 6, 9, 8, 39, 8, 662, DateTimeKind.Utc).AddTicks(668),
+                            CreatedAt = new DateTime(2025, 6, 7, 18, 18, 37, 561, DateTimeKind.Utc).AddTicks(2568),
                             Name = "Eline Willems",
                             Street = "Onze-Lieve-Vrouwestraat",
-                            UpdatedAt = new DateTime(2025, 6, 9, 8, 39, 8, 662, DateTimeKind.Utc).AddTicks(668),
+                            UpdatedAt = new DateTime(2025, 6, 7, 18, 18, 37, 561, DateTimeKind.Utc).AddTicks(2568),
                             ZipCode = "2800"
                         },
                         new
                         {
                             Id = 6,
                             City = "Antwerpen",
-                            CreatedAt = new DateTime(2025, 6, 9, 8, 39, 8, 662, DateTimeKind.Utc).AddTicks(670),
+                            CreatedAt = new DateTime(2025, 6, 7, 18, 18, 37, 561, DateTimeKind.Utc).AddTicks(2569),
                             Name = "Niels Vermeulen",
                             Street = "Groenplaats",
-                            UpdatedAt = new DateTime(2025, 6, 9, 8, 39, 8, 662, DateTimeKind.Utc).AddTicks(670),
+                            UpdatedAt = new DateTime(2025, 6, 7, 18, 18, 37, 561, DateTimeKind.Utc).AddTicks(2569),
                             ZipCode = "2000"
                         },
                         new
                         {
                             Id = 7,
                             City = "Oostende",
-                            CreatedAt = new DateTime(2025, 6, 9, 8, 39, 8, 662, DateTimeKind.Utc).AddTicks(672),
+                            CreatedAt = new DateTime(2025, 6, 7, 18, 18, 37, 561, DateTimeKind.Utc).AddTicks(2570),
                             Name = "Karen Van Damme",
                             Street = "Kapellestraat",
-                            UpdatedAt = new DateTime(2025, 6, 9, 8, 39, 8, 662, DateTimeKind.Utc).AddTicks(673),
+                            UpdatedAt = new DateTime(2025, 6, 7, 18, 18, 37, 561, DateTimeKind.Utc).AddTicks(2571),
                             ZipCode = "8400"
                         },
                         new
                         {
                             Id = 8,
                             City = "Kortrijk",
-                            CreatedAt = new DateTime(2025, 6, 9, 8, 39, 8, 662, DateTimeKind.Utc).AddTicks(675),
+                            CreatedAt = new DateTime(2025, 6, 7, 18, 18, 37, 561, DateTimeKind.Utc).AddTicks(2571),
                             Name = "Dries De Clercq",
                             Street = "Kortrijksesteenweg",
-                            UpdatedAt = new DateTime(2025, 6, 9, 8, 39, 8, 662, DateTimeKind.Utc).AddTicks(675),
+                            UpdatedAt = new DateTime(2025, 6, 7, 18, 18, 37, 561, DateTimeKind.Utc).AddTicks(2572),
                             ZipCode = "8500"
                         },
                         new
                         {
                             Id = 9,
                             City = "Knokke-Heist",
-                            CreatedAt = new DateTime(2025, 6, 9, 8, 39, 8, 662, DateTimeKind.Utc).AddTicks(677),
+                            CreatedAt = new DateTime(2025, 6, 7, 18, 18, 37, 561, DateTimeKind.Utc).AddTicks(2573),
                             Name = "Inge Goossens",
                             Street = "Lippenslaan",
-                            UpdatedAt = new DateTime(2025, 6, 9, 8, 39, 8, 662, DateTimeKind.Utc).AddTicks(677),
+                            UpdatedAt = new DateTime(2025, 6, 7, 18, 18, 37, 561, DateTimeKind.Utc).AddTicks(2573),
                             ZipCode = "8300"
                         },
                         new
                         {
                             Id = 10,
                             City = "Brussel",
-                            CreatedAt = new DateTime(2025, 6, 9, 8, 39, 8, 662, DateTimeKind.Utc).AddTicks(679),
+                            CreatedAt = new DateTime(2025, 6, 7, 18, 18, 37, 561, DateTimeKind.Utc).AddTicks(2574),
                             Name = "Wim Van den Broeck",
                             Street = "Rue de Namur",
-                            UpdatedAt = new DateTime(2025, 6, 9, 8, 39, 8, 662, DateTimeKind.Utc).AddTicks(679),
+                            UpdatedAt = new DateTime(2025, 6, 7, 18, 18, 37, 561, DateTimeKind.Utc).AddTicks(2574),
                             ZipCode = "1000"
                         });
                 });
@@ -415,13 +418,15 @@ namespace Stockify.Data.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
-                    b.Property<int>("ActionType")
-                        .HasColumnType("int");
-
                     b.Property<int>("OrderId")
                         .HasColumnType("int");
 
+                    b.Property<int>("Status")
+                        .HasColumnType("int");
+
                     b.HasKey("Id");
+
+                    b.HasIndex("OrderId");
 
                     b.ToTable("OrderActions");
                 });
@@ -504,221 +509,221 @@ namespace Stockify.Data.Migrations
                         {
                             Id = 1,
                             AvailableStock = 0,
-                            CreatedAt = new DateTime(2025, 6, 9, 8, 39, 8, 662, DateTimeKind.Utc).AddTicks(885),
+                            CreatedAt = new DateTime(2025, 6, 7, 18, 18, 37, 561, DateTimeKind.Utc).AddTicks(2705),
                             Name = "Toothbrush",
                             SerialNumber = 0L,
                             TotalStock = 0,
                             TotalStockActions = 0,
-                            UpdatedAt = new DateTime(2025, 6, 9, 8, 39, 8, 662, DateTimeKind.Utc).AddTicks(886)
+                            UpdatedAt = new DateTime(2025, 6, 7, 18, 18, 37, 561, DateTimeKind.Utc).AddTicks(2705)
                         },
                         new
                         {
                             Id = 2,
                             AvailableStock = 0,
-                            CreatedAt = new DateTime(2025, 6, 9, 8, 39, 8, 662, DateTimeKind.Utc).AddTicks(890),
+                            CreatedAt = new DateTime(2025, 6, 7, 18, 18, 37, 561, DateTimeKind.Utc).AddTicks(2708),
                             Name = "Schrijfbic",
                             SerialNumber = 0L,
                             TotalStock = 0,
                             TotalStockActions = 0,
-                            UpdatedAt = new DateTime(2025, 6, 9, 8, 39, 8, 662, DateTimeKind.Utc).AddTicks(890)
+                            UpdatedAt = new DateTime(2025, 6, 7, 18, 18, 37, 561, DateTimeKind.Utc).AddTicks(2709)
                         },
                         new
                         {
                             Id = 3,
                             AvailableStock = 0,
-                            CreatedAt = new DateTime(2025, 6, 9, 8, 39, 8, 662, DateTimeKind.Utc).AddTicks(892),
+                            CreatedAt = new DateTime(2025, 6, 7, 18, 18, 37, 561, DateTimeKind.Utc).AddTicks(2714),
                             Name = "Notitieboekje",
                             SerialNumber = 0L,
                             TotalStock = 0,
                             TotalStockActions = 0,
-                            UpdatedAt = new DateTime(2025, 6, 9, 8, 39, 8, 662, DateTimeKind.Utc).AddTicks(892)
+                            UpdatedAt = new DateTime(2025, 6, 7, 18, 18, 37, 561, DateTimeKind.Utc).AddTicks(2715)
                         },
                         new
                         {
                             Id = 4,
                             AvailableStock = 0,
-                            CreatedAt = new DateTime(2025, 6, 9, 8, 39, 8, 662, DateTimeKind.Utc).AddTicks(894),
+                            CreatedAt = new DateTime(2025, 6, 7, 18, 18, 37, 561, DateTimeKind.Utc).AddTicks(2716),
                             Name = "Afwasborstel",
                             SerialNumber = 0L,
                             TotalStock = 0,
                             TotalStockActions = 0,
-                            UpdatedAt = new DateTime(2025, 6, 9, 8, 39, 8, 662, DateTimeKind.Utc).AddTicks(894)
+                            UpdatedAt = new DateTime(2025, 6, 7, 18, 18, 37, 561, DateTimeKind.Utc).AddTicks(2716)
                         },
                         new
                         {
                             Id = 5,
                             AvailableStock = 0,
-                            CreatedAt = new DateTime(2025, 6, 9, 8, 39, 8, 662, DateTimeKind.Utc).AddTicks(896),
+                            CreatedAt = new DateTime(2025, 6, 7, 18, 18, 37, 561, DateTimeKind.Utc).AddTicks(2717),
                             Name = "Wc-borstel",
                             SerialNumber = 0L,
                             TotalStock = 0,
                             TotalStockActions = 0,
-                            UpdatedAt = new DateTime(2025, 6, 9, 8, 39, 8, 662, DateTimeKind.Utc).AddTicks(896)
+                            UpdatedAt = new DateTime(2025, 6, 7, 18, 18, 37, 561, DateTimeKind.Utc).AddTicks(2717)
                         },
                         new
                         {
                             Id = 6,
                             AvailableStock = 0,
-                            CreatedAt = new DateTime(2025, 6, 9, 8, 39, 8, 662, DateTimeKind.Utc).AddTicks(897),
+                            CreatedAt = new DateTime(2025, 6, 7, 18, 18, 37, 561, DateTimeKind.Utc).AddTicks(2718),
                             Name = "Flesopener",
                             SerialNumber = 0L,
                             TotalStock = 0,
                             TotalStockActions = 0,
-                            UpdatedAt = new DateTime(2025, 6, 9, 8, 39, 8, 662, DateTimeKind.Utc).AddTicks(898)
+                            UpdatedAt = new DateTime(2025, 6, 7, 18, 18, 37, 561, DateTimeKind.Utc).AddTicks(2719)
                         },
                         new
                         {
                             Id = 7,
                             AvailableStock = 0,
-                            CreatedAt = new DateTime(2025, 6, 9, 8, 39, 8, 662, DateTimeKind.Utc).AddTicks(899),
+                            CreatedAt = new DateTime(2025, 6, 7, 18, 18, 37, 561, DateTimeKind.Utc).AddTicks(2719),
                             Name = "Zaklamp",
                             SerialNumber = 0L,
                             TotalStock = 0,
                             TotalStockActions = 0,
-                            UpdatedAt = new DateTime(2025, 6, 9, 8, 39, 8, 662, DateTimeKind.Utc).AddTicks(900)
+                            UpdatedAt = new DateTime(2025, 6, 7, 18, 18, 37, 561, DateTimeKind.Utc).AddTicks(2720)
                         },
                         new
                         {
                             Id = 8,
                             AvailableStock = 0,
-                            CreatedAt = new DateTime(2025, 6, 9, 8, 39, 8, 662, DateTimeKind.Utc).AddTicks(901),
+                            CreatedAt = new DateTime(2025, 6, 7, 18, 18, 37, 561, DateTimeKind.Utc).AddTicks(2720),
                             Name = "Brooddoos",
                             SerialNumber = 0L,
                             TotalStock = 0,
                             TotalStockActions = 0,
-                            UpdatedAt = new DateTime(2025, 6, 9, 8, 39, 8, 662, DateTimeKind.Utc).AddTicks(901)
+                            UpdatedAt = new DateTime(2025, 6, 7, 18, 18, 37, 561, DateTimeKind.Utc).AddTicks(2721)
                         },
                         new
                         {
                             Id = 9,
                             AvailableStock = 0,
-                            CreatedAt = new DateTime(2025, 6, 9, 8, 39, 8, 662, DateTimeKind.Utc).AddTicks(903),
+                            CreatedAt = new DateTime(2025, 6, 7, 18, 18, 37, 561, DateTimeKind.Utc).AddTicks(2721),
                             Name = "Koffiemok",
                             SerialNumber = 0L,
                             TotalStock = 0,
                             TotalStockActions = 0,
-                            UpdatedAt = new DateTime(2025, 6, 9, 8, 39, 8, 662, DateTimeKind.Utc).AddTicks(903)
+                            UpdatedAt = new DateTime(2025, 6, 7, 18, 18, 37, 561, DateTimeKind.Utc).AddTicks(2722)
                         },
                         new
                         {
                             Id = 10,
                             AvailableStock = 0,
-                            CreatedAt = new DateTime(2025, 6, 9, 8, 39, 8, 662, DateTimeKind.Utc).AddTicks(904),
+                            CreatedAt = new DateTime(2025, 6, 7, 18, 18, 37, 561, DateTimeKind.Utc).AddTicks(2722),
                             Name = "Drinkfles",
                             SerialNumber = 0L,
                             TotalStock = 0,
                             TotalStockActions = 0,
-                            UpdatedAt = new DateTime(2025, 6, 9, 8, 39, 8, 662, DateTimeKind.Utc).AddTicks(905)
+                            UpdatedAt = new DateTime(2025, 6, 7, 18, 18, 37, 561, DateTimeKind.Utc).AddTicks(2723)
                         },
                         new
                         {
                             Id = 11,
                             AvailableStock = 0,
-                            CreatedAt = new DateTime(2025, 6, 9, 8, 39, 8, 662, DateTimeKind.Utc).AddTicks(906),
+                            CreatedAt = new DateTime(2025, 6, 7, 18, 18, 37, 561, DateTimeKind.Utc).AddTicks(2723),
                             Name = "Keukenschaar",
                             SerialNumber = 0L,
                             TotalStock = 0,
                             TotalStockActions = 0,
-                            UpdatedAt = new DateTime(2025, 6, 9, 8, 39, 8, 662, DateTimeKind.Utc).AddTicks(907)
+                            UpdatedAt = new DateTime(2025, 6, 7, 18, 18, 37, 561, DateTimeKind.Utc).AddTicks(2724)
                         },
                         new
                         {
                             Id = 12,
                             AvailableStock = 0,
-                            CreatedAt = new DateTime(2025, 6, 9, 8, 39, 8, 662, DateTimeKind.Utc).AddTicks(908),
+                            CreatedAt = new DateTime(2025, 6, 7, 18, 18, 37, 561, DateTimeKind.Utc).AddTicks(2724),
                             Name = "Tandenstoker",
                             SerialNumber = 0L,
                             TotalStock = 0,
                             TotalStockActions = 0,
-                            UpdatedAt = new DateTime(2025, 6, 9, 8, 39, 8, 662, DateTimeKind.Utc).AddTicks(908)
+                            UpdatedAt = new DateTime(2025, 6, 7, 18, 18, 37, 561, DateTimeKind.Utc).AddTicks(2725)
                         },
                         new
                         {
                             Id = 13,
                             AvailableStock = 0,
-                            CreatedAt = new DateTime(2025, 6, 9, 8, 39, 8, 662, DateTimeKind.Utc).AddTicks(910),
+                            CreatedAt = new DateTime(2025, 6, 7, 18, 18, 37, 561, DateTimeKind.Utc).AddTicks(2725),
                             Name = "Stekkerdoos",
                             SerialNumber = 0L,
                             TotalStock = 0,
                             TotalStockActions = 0,
-                            UpdatedAt = new DateTime(2025, 6, 9, 8, 39, 8, 662, DateTimeKind.Utc).AddTicks(910)
+                            UpdatedAt = new DateTime(2025, 6, 7, 18, 18, 37, 561, DateTimeKind.Utc).AddTicks(2726)
                         },
                         new
                         {
                             Id = 14,
                             AvailableStock = 0,
-                            CreatedAt = new DateTime(2025, 6, 9, 8, 39, 8, 662, DateTimeKind.Utc).AddTicks(911),
+                            CreatedAt = new DateTime(2025, 6, 7, 18, 18, 37, 561, DateTimeKind.Utc).AddTicks(2726),
                             Name = "Timer",
                             SerialNumber = 0L,
                             TotalStock = 0,
                             TotalStockActions = 0,
-                            UpdatedAt = new DateTime(2025, 6, 9, 8, 39, 8, 662, DateTimeKind.Utc).AddTicks(912)
+                            UpdatedAt = new DateTime(2025, 6, 7, 18, 18, 37, 561, DateTimeKind.Utc).AddTicks(2727)
                         },
                         new
                         {
                             Id = 15,
                             AvailableStock = 0,
-                            CreatedAt = new DateTime(2025, 6, 9, 8, 39, 8, 662, DateTimeKind.Utc).AddTicks(913),
+                            CreatedAt = new DateTime(2025, 6, 7, 18, 18, 37, 561, DateTimeKind.Utc).AddTicks(2727),
                             Name = "Fietslichtje",
                             SerialNumber = 0L,
                             TotalStock = 0,
                             TotalStockActions = 0,
-                            UpdatedAt = new DateTime(2025, 6, 9, 8, 39, 8, 662, DateTimeKind.Utc).AddTicks(914)
+                            UpdatedAt = new DateTime(2025, 6, 7, 18, 18, 37, 561, DateTimeKind.Utc).AddTicks(2728)
                         },
                         new
                         {
                             Id = 16,
                             AvailableStock = 0,
-                            CreatedAt = new DateTime(2025, 6, 9, 8, 39, 8, 662, DateTimeKind.Utc).AddTicks(915),
+                            CreatedAt = new DateTime(2025, 6, 7, 18, 18, 37, 561, DateTimeKind.Utc).AddTicks(2728),
                             Name = "Ovenwant",
                             SerialNumber = 0L,
                             TotalStock = 0,
                             TotalStockActions = 0,
-                            UpdatedAt = new DateTime(2025, 6, 9, 8, 39, 8, 662, DateTimeKind.Utc).AddTicks(915)
+                            UpdatedAt = new DateTime(2025, 6, 7, 18, 18, 37, 561, DateTimeKind.Utc).AddTicks(2729)
                         },
                         new
                         {
                             Id = 17,
                             AvailableStock = 0,
-                            CreatedAt = new DateTime(2025, 6, 9, 8, 39, 8, 662, DateTimeKind.Utc).AddTicks(917),
+                            CreatedAt = new DateTime(2025, 6, 7, 18, 18, 37, 561, DateTimeKind.Utc).AddTicks(2729),
                             Name = "Schroevendraaier",
                             SerialNumber = 0L,
                             TotalStock = 0,
                             TotalStockActions = 0,
-                            UpdatedAt = new DateTime(2025, 6, 9, 8, 39, 8, 662, DateTimeKind.Utc).AddTicks(917)
+                            UpdatedAt = new DateTime(2025, 6, 7, 18, 18, 37, 561, DateTimeKind.Utc).AddTicks(2730)
                         },
                         new
                         {
                             Id = 18,
                             AvailableStock = 0,
-                            CreatedAt = new DateTime(2025, 6, 9, 8, 39, 8, 662, DateTimeKind.Utc).AddTicks(918),
+                            CreatedAt = new DateTime(2025, 6, 7, 18, 18, 37, 561, DateTimeKind.Utc).AddTicks(2730),
                             Name = "Gsm-houder",
                             SerialNumber = 0L,
                             TotalStock = 0,
                             TotalStockActions = 0,
-                            UpdatedAt = new DateTime(2025, 6, 9, 8, 39, 8, 662, DateTimeKind.Utc).AddTicks(919)
+                            UpdatedAt = new DateTime(2025, 6, 7, 18, 18, 37, 561, DateTimeKind.Utc).AddTicks(2731)
                         },
                         new
                         {
                             Id = 19,
                             AvailableStock = 0,
-                            CreatedAt = new DateTime(2025, 6, 9, 8, 39, 8, 662, DateTimeKind.Utc).AddTicks(920),
+                            CreatedAt = new DateTime(2025, 6, 7, 18, 18, 37, 561, DateTimeKind.Utc).AddTicks(2731),
                             Name = "Rekenmachine",
                             SerialNumber = 0L,
                             TotalStock = 0,
                             TotalStockActions = 0,
-                            UpdatedAt = new DateTime(2025, 6, 9, 8, 39, 8, 662, DateTimeKind.Utc).AddTicks(921)
+                            UpdatedAt = new DateTime(2025, 6, 7, 18, 18, 37, 561, DateTimeKind.Utc).AddTicks(2732)
                         },
                         new
                         {
                             Id = 20,
                             AvailableStock = 0,
-                            CreatedAt = new DateTime(2025, 6, 9, 8, 39, 8, 662, DateTimeKind.Utc).AddTicks(922),
+                            CreatedAt = new DateTime(2025, 6, 7, 18, 18, 37, 561, DateTimeKind.Utc).AddTicks(2732),
                             Name = "Geurkaars",
                             SerialNumber = 0L,
                             TotalStock = 0,
                             TotalStockActions = 0,
-                            UpdatedAt = new DateTime(2025, 6, 9, 8, 39, 8, 662, DateTimeKind.Utc).AddTicks(922)
+                            UpdatedAt = new DateTime(2025, 6, 7, 18, 18, 37, 561, DateTimeKind.Utc).AddTicks(2733)
                         });
                 });
 
@@ -843,6 +848,17 @@ namespace Stockify.Data.Migrations
                     b.Navigation("UpdatedBy");
                 });
 
+            modelBuilder.Entity("Stockify.Objects.OrderAction", b =>
+                {
+                    b.HasOne("Stockify.Objects.Order", "Order")
+                        .WithMany("Actions")
+                        .HasForeignKey("OrderId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Order");
+                });
+
             modelBuilder.Entity("Stockify.Objects.OrderLine", b =>
                 {
                     b.HasOne("Stockify.Objects.Order", "Order")
@@ -896,6 +912,8 @@ namespace Stockify.Data.Migrations
 
             modelBuilder.Entity("Stockify.Objects.Order", b =>
                 {
+                    b.Navigation("Actions");
+
                     b.Navigation("OrderLines");
                 });
 

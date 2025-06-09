@@ -10,6 +10,7 @@ public interface IStockActionService
     Task DeleteReservations(List<OrderLine> orderLines);
     Task<List<StockAction>> GetAllAsync();
     Task<StockAction?> GetByIdAsync(int id);
+    Task<StockAction?> GetByOrderLineIdAsync(int id);
     Task<PaginatedResult<StockAction>> GetPagedAsync(int productId, int pageNumber, int pageSize, string sortBy, bool ascending);
     Task UpdateReservation(OrderLine orderLine);
     Task UpdateReservations(List<OrderLine> orderLines);

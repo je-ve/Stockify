@@ -1,4 +1,47 @@
-﻿<th>
+﻿<th class="text-black fw-bold small">
+    <button class="btn btn-link p-0 m-0 flex-grow-1 text-start small btn-sm" @onclick="ToggleSort">
+        @ChildContent
+    </button>
+    
+    @if (IsSorted)
+    {
+        
+            <i class="bi bi-caret-up-fill @(SortAscending ? "text-primary" : "text-muted")"
+               @onclick="() => SetSort(true)"></i>
+            <i class="bi bi-caret-down-fill @(!SortAscending ? "text-primary" : "text-muted")"
+               @onclick="() => SetSort(false)"></i>
+        
+    }
+</th>
+
+@code {
+    [Parameter] public string SortColumn { get; set; } = string.Empty;
+    [Parameter] public string CurrentSortBy { get; set; } = string.Empty;
+    [Parameter] public bool SortAscending { get; set; }
+    [Parameter] public EventCallback<(string Column, bool Ascending)> OnSortChanged { get; set; }
+    [Parameter] public RenderFragment? ChildContent { get; set; }
+
+    private bool IsSorted => CurrentSortBy == SortColumn;
+
+    private async Task ToggleSort()
+    {
+        bool newAsc = true;
+        if (IsSorted)
+            newAsc = !SortAscending;
+        await OnSortChanged.InvokeAsync((SortColumn, newAsc));
+    }
+
+    private async Task SetSort(bool ascending)
+    {
+        await OnSortChanged.InvokeAsync((SortColumn, ascending));
+    }
+}
+
+
+
+
+@*
+<th>
 	<button class="btn btn-link p-0" @onclick="OnClick">
 		@ChildContent
 		<i class="bi ms-1 @(IsSorted ? (SortAscending ? "bi-arrow-up" : "bi-arrow-down") : "invisible")"></i>
@@ -24,3 +67,4 @@
 		await OnSortChanged.InvokeAsync((SortColumn, newAsc));
 	}
 }
+*@

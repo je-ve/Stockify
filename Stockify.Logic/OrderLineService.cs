@@ -24,14 +24,17 @@ public class OrderLineService : IOrderLineService
         .Include(ol => ol.Product)
         .FirstOrDefaultAsync(ol => ol.Id == id);
 
-    public async Task AddAsync(OrderLine line)
+    public async Task AddAsync(OrderLine line, string currentUserId)
     {
         Order order = await _context.Orders.Include(o => o.OrderLines).FirstOrDefaultAsync(o => o.Id == line.OrderId);
         if (order.Status != OrderStatus.Created)
         {
             throw new InvalidOperationException("Only order lines from orders with status 'Created' can be deleted.");
         }
+        order.UpdatedAt = DateTime.UtcNow;
+        order.UpdatedById = currentUserId;
         _context.OrderLines.Add(line);
+
         await _context.SaveChangesAsync();
         await stockActionService.AddReservation(line);
         
@@ -60,21 +63,27 @@ public class OrderLineService : IOrderLineService
         }
     }
 
-    public async Task UpdateAsync(int id)
+    public async Task UpdateAsync(int id, string currentUserId)
     {
         var line = await _context.OrderLines.FindAsync(id);
         if (line != null)
         {
-            await UpdateAsync(line);            
+            await UpdateAsync(line, currentUserId);
         }
     }
 
-    public async Task UpdateAsync(OrderLine updatedLine)
+    public async Task UpdateAsync(OrderLine updatedLine, string currentUserId)
     {
+        Order order = await _context.Orders.Include(o => o.OrderLines).FirstOrDefaultAsync(o => o.Id == updatedLine.OrderId);
+
         if (updatedLine.Order.Status != OrderStatus.Created)
         {
             throw new InvalidOperationException("Only order lines from orders with status 'Created' can be deleted.");
         }
+              
+        order.UpdatedAt = DateTime.UtcNow;
+        order.UpdatedById = currentUserId;        
+
         await stockActionService.UpdateReservation(updatedLine);
         _context.OrderLines.Update(updatedLine);        
         await _context.SaveChangesAsync();        

@@ -1,0 +1,51 @@
+﻿@if (IsVisible)
+{
+    <div class="modal d-block" tabindex="-1" style="background-color: rgba(0,0,0,0.5);">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">@Title</h5>
+                    <button class="btn-close" @onclick="Hide"></button>
+                </div>
+                <div class="modal-body">
+                    <p>@Message</p>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-secondary" @onclick="Hide">Nee</button>
+                    <button class="btn btn-primary" @onclick="OnConfirmClicked">Ja</button>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    private bool IsVisible { get; set; } = false;
+    private int ItemId;
+    private Func<int, Task> ConfirmCallback;
+
+    [Parameter] public string Title { get; set; } = "Bevestig actie";
+    [Parameter] public string Message { get; set; }
+
+    public void Show(int itemId, string message, Func<int, Task> onConfirm)
+    {
+        ItemId = itemId;
+        Message = message;
+        ConfirmCallback = onConfirm;
+        IsVisible = true;
+        StateHasChanged();
+    }
+
+    public void Hide()
+    {
+        IsVisible = false;
+        StateHasChanged();
+    }
+
+    private async Task OnConfirmClicked()
+    {
+        IsVisible = false;
+        if (ConfirmCallback != null)
+            await ConfirmCallback.Invoke(ItemId);
+    }
+}

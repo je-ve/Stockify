@@ -9,15 +9,22 @@ public class ProductService : IProductService
     public ProductService(StockifyContext context) => _context = context;
     public async Task<List<Product>> GetAllAsync() => await _context.Products.ToListAsync();
     public async Task<Product?> GetByIdAsync(int id) => await _context.Products.FindAsync(id);
-
-    public async Task AddAsync(Product product)
+    public async Task AddAsync(Product product, string currentUserId)
     {
+        product.CreatedAt = DateTime.UtcNow;
+        product.CreatedById = currentUserId;
+        product.UpdatedAt = DateTime.UtcNow;
+        product.UpdatedById = currentUserId;
+
         _context.Products.Add(product);
         await _context.SaveChangesAsync();
     }
 
-    public async Task UpdateAsync(Product product)
+    public async Task UpdateAsync(Product product, string currentUserId)
     {
+        product.UpdatedAt = DateTime.UtcNow;
+        product.UpdatedById = currentUserId;
+
         _context.Products.Update(product);
         await _context.SaveChangesAsync();
     }
@@ -54,7 +61,7 @@ public class ProductService : IProductService
 
     public async Task<PaginatedResult<Product>> GetPagedAsync(int pageNumber, int pageSize, string sortBy, bool ascending)
     {
-        var query = _context.Products.AsQueryable();
+        var query = _context.Products.Include(c => c.UpdatedBy).AsQueryable();
 
         // Apply sorting
         query = (sortBy.ToLower(), ascending) switch
@@ -71,6 +78,14 @@ public class ProductService : IProductService
             ("totalstockactions", false) => query.OrderByDescending(c => c.TotalStockActions),
             ("laststockaction", true) => query.OrderBy(c => c.TotalStockActions),
             ("laststockaction", false) => query.OrderByDescending(c => c.TotalStockActions),
+            ("createdby", true) => query.OrderBy(c => c.CreatedBy.UserName),
+            ("createdby", false) => query.OrderByDescending(c => c.CreatedBy.UserName),
+            ("createdat", true) => query.OrderBy(c => c.CreatedAt),
+            ("createdat", false) => query.OrderByDescending(c => c.CreatedAt),
+            ("updatedby", true) => query.OrderBy(c => c.UpdatedBy.UserName),
+            ("updatedby", false) => query.OrderByDescending(c => c.UpdatedBy.UserName),
+            ("updatedat", true) => query.OrderBy(c => c.UpdatedAt),
+            ("updatedat", false) => query.OrderByDescending(c => c.UpdatedAt),
             _ => query.OrderBy(c => c.Name) // default
         };
 

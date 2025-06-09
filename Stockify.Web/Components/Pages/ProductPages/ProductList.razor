@@ -5,6 +5,7 @@
 @using Stockify.Web.ViewModels
 @using Stockify.Web.Components.Shared
 @using Stockify.Extensions
+@inject AuthenticationStateProvider AuthenticationStateProvider
 @rendermode InteractiveServer
 
 @attribute [Authorize]
@@ -21,7 +22,7 @@
 }
 else if (Products == null || Products.Count == 0)
 {
-	<p>Geen producten gevonden.</p>
+	<p>Geen producten gevonden.</p>	
 }
 else
 {
@@ -32,7 +33,7 @@ else
 		</button>
 	</div>
 
-	<table class="table table-bordered">
+	<table class="table table-bordered small">
 		<thead>
 			<tr>
 				<th></th>
@@ -43,17 +44,29 @@ else
 					Naam
 				</SortableHeader>
 				<SortableHeader SortColumn="TotalStock" CurrentSortBy="@SortBy" SortAscending="@SortAscending" OnSortChanged="HandleSortChanged">
-					Totale voorraad
+					Totaal
 				</SortableHeader>
 				<SortableHeader SortColumn="AvailableStock" CurrentSortBy="@SortBy" SortAscending="@SortAscending" OnSortChanged="HandleSortChanged">
-					Beschikbare voorraad
+					Beschikbaar
 				</SortableHeader>
 				<SortableHeader SortColumn="TotalStockActions" CurrentSortBy="@SortBy" SortAscending="@SortAscending" OnSortChanged="HandleSortChanged">
-					Aantal voorraadacties
+					Aantal acties
 				</SortableHeader>
 				<SortableHeader SortColumn="LastStockAction" CurrentSortBy="@SortBy" SortAscending="@SortAscending" OnSortChanged="HandleSortChanged">
-					Laatste voorraadactie
+					Laatste actie
 				</SortableHeader>
+				<SortableHeader SortColumn="CreatedBy" CurrentSortBy="@SortBy" SortAscending="@SortAscending" OnSortChanged="HandleSortChanged">
+					Aangemaakt door
+				</SortableHeader>
+				<SortableHeader SortColumn="CreatedAt" CurrentSortBy="@SortBy" SortAscending="@SortAscending" OnSortChanged="HandleSortChanged">
+					Aangemaakt op
+				</SortableHeader>
+				<SortableHeader SortColumn="UpdatedBy" CurrentSortBy="@SortBy" SortAscending="@SortAscending" OnSortChanged="HandleSortChanged">
+					Gewijzigd door
+				</SortableHeader>
+				<SortableHeader SortColumn="UpdatedAt" CurrentSortBy="@SortBy" SortAscending="@SortAscending" OnSortChanged="HandleSortChanged">
+					Gewijzigd op
+				</SortableHeader>				
 			</tr>
 		</thead>
 		<tbody>
@@ -66,7 +79,11 @@ else
 					<td>@Product.TotalStock</td>
 					<td>@Product.AvailableStock</td>
 					<td>@Product.TotalStockActions</td>
-					<td>@Product.LastStockAction.ToBelgianFormat()</td>
+					<td>@Product.LastStockAction.ToBelgianFormat()</td>					
+					<td>@Product.CreatedBy?.UserName</td>
+					<td>@Product.CreatedAt.ToBelgianFormat()</td>
+					<td>@Product.UpdatedBy?.UserName</td>
+					<td>@Product.UpdatedAt.ToBelgianFormat()</td>
 				</tr>
 			}
 		</tbody>
@@ -121,11 +138,26 @@ else
 	public bool IsLoading { get; set; } = true;
 	private bool _showModal = false;
 	private bool IsSaving = false;
+	private string? currentUserId;
 	private ProductInputModel NewProduct = new();
 
 	protected override async Task OnInitializedAsync()
 	{
 		await LoadProductsData();
+	
+		/*		
+		List<Product> prods = await svc.GetAllAsync();
+		foreach (var prod in prods)	svc.RecalculateStock(prod);
+		*/
+
+		var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+		var user = authState.User;
+
+		if (user.Identity?.IsAuthenticated ?? false)
+		{
+			currentUserId = user.FindFirst(c => c.Type == "sub")?.Value // OpenID Connect "sub" claim
+						?? user.FindFirst(c => c.Type == ClaimTypes.NameIdentifier)?.Value; // fallback
+		}
 	}
 
 	private async Task LoadProductsData()
@@ -152,7 +184,7 @@ else
 					Name = NewProduct.Name								
 				};
 
-			await svc.AddAsync(Product);
+			await svc.AddAsync(Product, currentUserId);
 			await LoadProductsData();
 			ToastService.ShowSuccess("product succesvol toegevoegd.");
 			HideModal();
