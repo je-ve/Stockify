@@ -111,31 +111,33 @@ else
 
 @*  Actielijst*@
 
-<h3>Voorraadbewerkingen</h3>
+<h3 class="mt-2 mb-0 pb-0">Voorraadbewerkingen</h3>
 
 @if (Product == null || Product.TotalStockActions == 0)
 {
 	<p>Geen voorraadbewerkingen gevonden.</p>
 
 	<div class="mb-2">
-		<button class="btn btn-ternary" @onclick="@(() => ShowModal(StockActionType.Addition))">
+		<button class="btn btn-light" @onclick="@(() => ShowModal(StockActionType.Addition))">
 			<i class="bi bi-plus-lg"> Voeg voorraad toe</i>
 		</button>
 	</div>
 }
 else
 {
-	<div class="d-flex justify-content-end mb-2">
+	<div class="d-flex justify-content-end mb-1">
 		<PageSizeSelector PageSize="@PageSize" OnPageSizeChanged="ChangePageSize" />
-		<button class="btn btn-primary" @onclick="@(() => ShowModal(StockActionType.Addition))">
-			<i class="bi bi-plus-lg"></i>
-		</button>
-		<button class="btn btn-primary" @onclick="@(() => ShowModal(StockActionType.Reduction))">
-			<i class="bi bi-dash-lg"></i>
-		</button>
+		<span>
+			<button class="btn btn-outline-success btn-sm ms-3 me-1" @onclick="@(() => ShowModal(StockActionType.Addition))">
+				<i class="bi bi-plus-lg"></i>
+			</button>
+			<button class="btn btn-outline-danger btn-sm" @onclick="@(() => ShowModal(StockActionType.Reduction))">
+				<i class="bi bi-dash-lg"></i>
+			</button>
+		</span>
 	</div>
 
-	<table class="table table-bordered">
+	<table class="table table-sm table-bordered">
 		<thead>
 			<tr>
 				<SortableHeader SortColumn="type" CurrentSortBy="@SortBy" SortAscending="@SortAscending" OnSortChanged="HandleSortChanged">
@@ -147,13 +149,13 @@ else
 				<SortableHeader SortColumn="createdat" CurrentSortBy="@SortBy" SortAscending="@SortAscending" OnSortChanged="HandleSortChanged">
 					Tijdstip
 				</SortableHeader>
-				<th>Ordernummer</th>
+				<th class="small">Ordernummer</th>
 			</tr>
 		</thead>
 		<tbody>
 			@foreach (var action in StockActions)
 			{
-				<tr>
+				<tr class="small">
 					<td>@action.Type</td>
 					<td>@action.Quantity</td>
 					<td>@action.CreatedAt.ToBelgianFormat()</td>
@@ -185,7 +187,7 @@ else
 							<ValidationMessage For="@(() => NewStockAction.Quantity)" />
 							@if (_selectedType == StockActionType.Reduction)
 							{
-								<small class="text-muted">Maximale reductie: @Product.TotalStock</small>
+								<small class="text-muted">Maximale reductie: @Product.AvailableStock</small>
 							}
 						</div>
 					</div>
@@ -315,16 +317,14 @@ else
 		IsSaving = true;
 		try
 		{
-
-			/*
-			if (_selectedType == StockActionType.Reduction && NewStockAction.Quantity > Product.TotalStock)
+			if (_selectedType == StockActionType.Reduction && NewStockAction.Quantity > Product.AvailableStock)
 			{
 				ToastService.ShowError("Reductie kan niet groter zijn dan de totale voorraad.");
 				IsSaving = false;
 				return;
-				}
-			*/
-							var stockAction = new StockAction
+			}
+
+			var stockAction = new StockAction
 				{
 					ProductId = Product.Id,
 					Type = _selectedType,
@@ -334,7 +334,7 @@ else
 			await stockActionSvc.AddAsync(stockAction);
 			await LoadProduct();
 			await LoadStockActions();
-			ToastService.ShowSuccess("Actie succesvol toegevoegd.");
+			ToastService.ShowSuccess("Actie toegevoegd.");
 			HideModal();
 		}
 		catch

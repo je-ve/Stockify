@@ -10,7 +10,7 @@
 
 <h3>Klanten</h3>
 
-@if(IsLoading)
+@if (IsLoading)
 {
 	<div class="d-flex justify-content-center my-4">
 		<div class="spinner-border text-primary" role="status">
@@ -24,11 +24,17 @@ else if (Customers == null || Customers.Count == 0)
 }
 else
 {
+
+
+
 	<div class="d-flex justify-content-end mb-2">
+
 		<PageSizeSelector PageSize="@PageSize" OnPageSizeChanged="ChangePageSize" />
-		<button class="btn btn-primary" @onclick="ShowModal">
-			<i class="bi bi-plus-lg"></i>
-		</button>
+		<div class="mb-2">
+			<button class="btn btn-light text-secondary" @onclick="ShowModal">
+				<span><i class="bi bi-plus-lg"></i> Nieuwe klant</span>
+			</button>
+		</div>
 	</div>
 
 	<table class="table table-bordered small">
@@ -65,7 +71,7 @@ else
 					<td><a href="customer/@customer.Id">@customer.Number</a></td>
 					<td>@customer.Name</td>
 					<td>@customer.Email</td>
-					<td>@customer.Address</td>					
+					<td>@customer.Address</td>
 					<td>@customer?.CreatedBy?.UserName</td>
 					<td>@customer.CreatedAt.ToBelgianFormat()</td>
 					<td>@customer?.UpdatedBy?.UserName</td>
@@ -104,6 +110,11 @@ else
 							<label class="form-label">Adres</label>
 							<InputText class="form-control" @bind-Value="NewCustomer.Street" />
 							<ValidationMessage For="@(() => NewCustomer.Street)" />
+						</div>
+						<div class="mb-3">
+							<label class="form-label">Nummer</label>
+							<InputText class="form-control" @bind-Value="NewCustomer.HouseNumber" />
+							<ValidationMessage For="@(() => NewCustomer.HouseNumber)" />
 						</div>
 						<div class="mb-3">
 							<label class="form-label">Postcode</label>
@@ -177,6 +188,7 @@ else
 					Name = NewCustomer.Name,
 					Email = NewCustomer.Email,
 					Street = NewCustomer.Street,
+					HouseNumber = NewCustomer.HouseNumber,
 					ZipCode = NewCustomer.Zipcode,
 					City = NewCustomer.City
 				};

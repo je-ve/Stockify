@@ -22,15 +22,17 @@
 }
 else if (Products == null || Products.Count == 0)
 {
-	<p>Geen producten gevonden.</p>	
+	<p>Geen producten gevonden.</p>
 }
 else
 {
 	<div class="d-flex justify-content-end mb-2">
 		<PageSizeSelector PageSize="@PageSize" OnPageSizeChanged="ChangePageSize" />
-		<button class="btn btn-primary" @onclick="ShowModal">
-			<i class="bi bi-plus-lg"></i>
-		</button>
+		<div class="mb-2">
+			<button class="btn btn-light ms-4 text-secondary" @onclick="ShowModal">
+				<span><i class="bi bi-plus-lg"></i>Product toevoegen</span>
+			</button>
+		</div>
 	</div>
 
 	<table class="table table-bordered small">
@@ -66,7 +68,7 @@ else
 				</SortableHeader>
 				<SortableHeader SortColumn="UpdatedAt" CurrentSortBy="@SortBy" SortAscending="@SortAscending" OnSortChanged="HandleSortChanged">
 					Gewijzigd op
-				</SortableHeader>				
+				</SortableHeader>
 			</tr>
 		</thead>
 		<tbody>
@@ -80,8 +82,8 @@ else
 					<td>@Product.AvailableStock</td>
 					<td>@Product.TotalStockActions</td>
 					<td class="small">@Product.LastStockAction.ToBelgianFormat()</td>
-					<td >@Product.CreatedBy?.UserName</td>
-					<td class ="small">@Product.CreatedAt.ToBelgianFormat()</td>
+					<td>@Product.CreatedBy?.UserName</td>
+					<td class="small">@Product.CreatedAt.ToBelgianFormat()</td>
 					<td>@Product.UpdatedBy?.UserName</td>
 					<td class="small">@Product.UpdatedAt.ToBelgianFormat()</td>
 				</tr>
@@ -114,7 +116,7 @@ else
 							<label class="form-label">Serienummer</label>
 							<InputNumber class="form-control" @bind-Value="NewProduct.SerialNumber" />
 							<ValidationMessage For="@(() => NewProduct.SerialNumber)" />
-						</div>						
+						</div>
 					</div>
 					<div class="modal-footer">
 						<button type="button" class="btn btn-secondary" @onclick="HideModal" disabled="@IsSaving">Annuleren</button>
@@ -144,13 +146,13 @@ else
 	protected override async Task OnInitializedAsync()
 	{
 		await LoadProductsData();
-	
-		/*		
+
+		/*
 		List<Product> prods = await svc.GetAllAsync();
 		foreach (var prod in prods)	svc.RecalculateStock(prod);
 		*/
 
-		var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+					var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
 		var user = authState.User;
 
 		if (user.Identity?.IsAuthenticated ?? false)
@@ -181,7 +183,7 @@ else
 			var Product = new Product
 				{
 					SerialNumber = NewProduct.SerialNumber,
-					Name = NewProduct.Name								
+					Name = NewProduct.Name
 				};
 
 			await svc.AddAsync(Product, currentUserId);

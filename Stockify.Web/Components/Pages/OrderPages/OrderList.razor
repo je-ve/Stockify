@@ -24,7 +24,7 @@ else if (Orders == null || Orders.Count == 0)
 {
 	<p>Geen bestelllingen gevonden.</p>
 	<a class="btn btn-ternary text-secondary" href="/order/0">
-		<i class="bi bi-plus"></i> Nieuwe bestelling
+		<i class="bi bi-plus-lg"></i> Nieuwe bestelling
 	</a>
 
 }
@@ -32,9 +32,12 @@ else
 {
 	<div class="d-flex justify-content-end mb-2">
 		<PageSizeSelector PageSize="@PageSize" OnPageSizeChanged="ChangePageSize" />
-		<a class="btn btn-small btn-ternary text-secondary border border-1 mb-0 ml-2" href="/order/0">
-			<i class="bi bi-plus"></i> Nieuwe bestelling
-		</a>
+
+		<div class="mb-2">
+			<a class="btn btn-light ms-4 text-secondary" href="/order/0">
+				<span><i class="bi bi-plus-lg"></i> Nieuwe bestelling</span>
+			</a>
+		</div>
 	</div>
 
 	<table class="table table-bordered small">

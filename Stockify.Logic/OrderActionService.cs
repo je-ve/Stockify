@@ -37,9 +37,7 @@ public class OrderActionService : IOrderActionService
         //status aanpassen, stockacties aanpassen
         if (type == OrderActionType.Delivery)
         {
-
-            await emailService.SendEmailWithAttachmentAsync(order);
-            /*
+            await emailService.SendEmailWithAttachmentAsync(order);        
 
             //Enkel nieuwe orders kunnen geleverd worden
             if (order.Status != OrderStatus.Created) throw new InvalidOperationException($"Order with ID {orderId} is not a new order.");
@@ -51,10 +49,7 @@ public class OrderActionService : IOrderActionService
                 stockAction.Type = StockActionType.Reduction;
                 await productService.RecalculateStock(stockAction.ProductId);
             }
-
             order.Status = OrderStatus.Delivered;
-            */
-
         }
 
 

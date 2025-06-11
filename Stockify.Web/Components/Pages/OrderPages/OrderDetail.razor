@@ -37,7 +37,7 @@ else
 					</p>
 				</div>
 				<div>
-					<button class="btn btn-ternary text-secondary" disabled="@(order?.Status != OrderStatus.Created)" @onclick ="OpenEditHeaderModal"><i class="bi bi-pencil me-1"> Klant bewerken</i></button>
+					<button class="btn btn-light text-secondary" disabled="@(order?.Status != OrderStatus.Created)" @onclick ="OpenEditHeaderModal"><i class="bi bi-pencil me-1"> Klant bewerken</i></button>
 				</div>
 			</div>
 		</div>
@@ -94,18 +94,18 @@ else
 
 		<div class="d-flex justify-content-between mb-2">
 		<span>
-			<button class="btn btn-ternary text-secondary" disabled="@(order?.Status != OrderStatus.Created)" @onclick ="() => OpenOrderLineModal(0)">
+			<button class="btn btn-light text-secondary" disabled="@(order?.Status != OrderStatus.Created)" @onclick ="() => OpenOrderLineModal(0)">
 				<i class="bi bi-plus-lg"> Voeg product toe</i>
 			</button>
 			</span>
 			<span>
-				<button class="btn btn-info mx-lg-1" disabled="@(order.Status != OrderStatus.Created)" data-bs-toggle="tooltip" title="Markeer als geleverd" @onclick="() => ShowDeliverConfirm(order.Id)">
+				<button class="btn btn-info mx-lg-1" disabled="@(order.Status != OrderStatus.Created || order?.OrderLines?.Count==0 )" data-bs-toggle="tooltip" title="Markeer als geleverd" @onclick="() => ShowDeliverConfirm(order.Id)">
 					<i class="bi bi-truck me-2"></i> <span class="me-2">Leveren</span>
 				</button>
-				<button type="button" class="btn btn-warning mx-lg-1" disabled="@(order.Status != OrderStatus.Created)" data-bs-toggle="tooltip" title="Markeer als geannuleerd" @onclick="() => ShowCancelConfirm(order.Id)">
+				<button type="button" class="btn btn-warning mx-lg-1" disabled="@(order.Status != OrderStatus.Created || order?.OrderLines?.Count==0 )" data-bs-toggle="tooltip" title="Markeer als geannuleerd" @onclick="() => ShowCancelConfirm(order.Id)">
 					<i class="bi bi-x-circle text-dark me-2"></i>  Annuleren
 				</button>
-				<button type="button" class="btn btn-danger ms-lg-1" disabled="@(order.Status == OrderStatus.Delivered)" data-bs-toggle="tooltip" title="Bestelling schrappen" @onclick="() => ShowDeleteConfirm(order.Id)">
+				<button type="button" class="btn btn-danger ms-lg-1" disabled="@(order.Status == OrderStatus.Delivered || order?.OrderLines?.Count==0 )" data-bs-toggle="tooltip" title="Bestelling schrappen" @onclick="() => ShowDeleteConfirm(order.Id)">
 					<i class="bi bi-trash"></i>  Verwijderen
 				</button>
 			</span>

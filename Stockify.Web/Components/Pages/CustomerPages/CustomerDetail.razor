@@ -64,6 +64,11 @@ else
 							<ValidationMessage For="@(() => EditModel.Street)" />
 						</div>
 						<div class="mb-3">
+							<label class="form-label">Nummer</label>
+							<InputText class="form-control" @bind-Value="EditModel.HouseNumber" />
+							<ValidationMessage For="@(() => EditModel.HouseNumber)" />
+						</div>
+						<div class="mb-3">
 							<label class="form-label">Postcode</label>
 							<InputText class="form-control" @bind-Value="EditModel.Zipcode" />
 							<ValidationMessage For="@(() => EditModel.Zipcode)" />
@@ -146,6 +151,7 @@ else
 					Name = Customer.Name,
 					Email = Customer.Email,
 					Street = Customer.Street,
+					HouseNumber = Customer.HouseNumber,
 					Zipcode = Customer.ZipCode,
 					City = Customer.City
 				};
@@ -166,6 +172,7 @@ else
 		Customer.Name = EditModel.Name;
 		Customer.Email = EditModel.Email;
 		Customer.Street = EditModel.Street;
+		Customer.HouseNumber = EditModel.HouseNumber; 
 		Customer.ZipCode = EditModel.Zipcode;
 		Customer.City = EditModel.City;
 

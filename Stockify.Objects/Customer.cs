@@ -27,6 +27,10 @@ public class Customer
     public string Street { get; set; }
 
     [Required]
+    [StringLength(5, ErrorMessage = "De straatnaam is te lang")]
+    public string HouseNumber { get; set; } = "2";
+
+    [Required]
     [StringLength(50, ErrorMessage = "De naam plaatsnaam is te lang")]
     public string City { get; set; }
 
@@ -48,6 +52,6 @@ public class Customer
     public ApplicationUser? UpdatedBy { get; set; }
 
     [NotMapped]
-    public string Address { get { return $"{Street}, {ZipCode} {City}"; } }
+    public string Address { get { return $"{Street} {HouseNumber}, {ZipCode} {City}"; } }
 }
 

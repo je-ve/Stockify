@@ -23,6 +23,15 @@ public class StockActionService : IStockActionService
     public async Task<StockAction?> GetByOrderLineIdAsync(int id) => await _context.StockActions.FirstOrDefaultAsync(sa => sa.OrderLineId == id);
     public async Task AddAsync(StockAction action)
     {
+        if(action.Type == StockActionType.Reduction)
+        {
+            Product product = await productService.GetByIdAsync(action.ProductId);
+            if(action.Quantity>product.AvailableStock)
+            {
+                throw new Exception("Reductie mag niet groter zijn dan beschikbare voorraad.");
+            }
+        }
+        
         _context.StockActions.Add(action);
         await _context.SaveChangesAsync();
         await productService.RecalculateStock(action.ProductId);
