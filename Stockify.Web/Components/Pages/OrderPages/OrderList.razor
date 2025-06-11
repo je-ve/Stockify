@@ -8,6 +8,7 @@
 @using Stockify.Web.Components.Shared
 
 @attribute [Authorize]
+<PageTitle>Bestellingen</PageTitle>
 
 <h3>Bestellingen</h3>
 
@@ -79,10 +80,10 @@ else
 						<button class="btn btn-info btn-sm" disabled="@(Order.Status != OrderStatus.Created)" data-bs-toggle="tooltip" title="Markeer als geleverd" @onclick="() => ShowDeliverConfirm(Order.Id)">
 							<i class="bi bi-truck"></i>
 						</button>
-						<button type="button" class="btn btn-warning btn-sm" disabled="@(Order.Status != OrderStatus.Created)" data-bs-toggle="tooltip" title="Markeer als geannulleerd" @onclick="() => ShowCancelConfirm(Order.Id)">
+						<button type="button" class="btn btn-warning btn-sm" disabled="@(Order.Status != OrderStatus.Created)" data-bs-toggle="tooltip" title="Markeer als geannuleerd" @onclick="() => ShowCancelConfirm(Order.Id)">
 							<i class="bi bi-x-circle text-dark"></i>
 						</button>
-						<button type="button" class="btn btn-danger btn-sm" data-bs-toggle="tooltip" title="Bestelling schrappen" @onclick="() => ShowDeleteConfirm(Order.Id)">
+						<button type="button" class="btn btn-danger btn-sm" disabled="@(Order.Status == OrderStatus.Delivered)" data-bs-toggle="tooltip" title="Bestelling schrappen" @onclick="() => ShowDeleteConfirm(Order.Id)">
 							<i class="bi bi-trash"></i>
 						</button>
 					</td>
@@ -163,7 +164,7 @@ else
 		try
 		{
 			await orderActionService.CreateOrderAction(orderId, OrderActionType.Cancel);
-			ToastService.ShowSuccess($"Bestelling {orderId} is geannulleerd.");
+			ToastService.ShowSuccess($"Bestelling {orderId} is geannuleerd.");
 			// your logic here
 		}
 		catch (Exception ex)
@@ -209,7 +210,7 @@ else
 		}
 	}
 
-	private string LastAction = "";
+	//private string LastAction = "";
 
 	// Pagination
 	private int CurrentPage = 1;
@@ -235,8 +236,8 @@ else
 	}
 
 	// Sorting
-	private string SortBy = "customerNumber";
-	private bool SortAscending = true;
+	private string SortBy = "UpdatedAt";
+	private bool SortAscending = false;
 
 	private async Task HandleSortChanged((string Column, bool Ascending) sort)
 	{

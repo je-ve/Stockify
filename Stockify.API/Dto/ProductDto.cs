@@ -10,10 +10,4 @@ public class ProductDto
 
     [Required]
     public string Name { get; set; }
-
-    //public virtual ICollection<StockAction> StockActions { get; set; } = new List<StockAction>();
-    //public int TotalStock { get; set; }
-   //public int AvailableStock { get; set; }
-    //public int TotalStockActions { get; set; }
-    //public DateTime? LastStockAction { get; set; }
 }

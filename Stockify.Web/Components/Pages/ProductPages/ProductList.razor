@@ -72,18 +72,18 @@ else
 		<tbody>
 			@foreach (var Product in Products)
 			{
-				<tr>
+				<tr class="small">
 					<td><a href="Product/@Product.Id">@Product.Id</a></td>
 					<td>@Product.SerialNumber</td>
 					<td>@Product.Name</td>
 					<td>@Product.TotalStock</td>
 					<td>@Product.AvailableStock</td>
 					<td>@Product.TotalStockActions</td>
-					<td>@Product.LastStockAction.ToBelgianFormat()</td>					
-					<td>@Product.CreatedBy?.UserName</td>
-					<td>@Product.CreatedAt.ToBelgianFormat()</td>
+					<td class="small">@Product.LastStockAction.ToBelgianFormat()</td>
+					<td >@Product.CreatedBy?.UserName</td>
+					<td class ="small">@Product.CreatedAt.ToBelgianFormat()</td>
 					<td>@Product.UpdatedBy?.UserName</td>
-					<td>@Product.UpdatedAt.ToBelgianFormat()</td>
+					<td class="small">@Product.UpdatedAt.ToBelgianFormat()</td>
 				</tr>
 			}
 		</tbody>
@@ -223,8 +223,8 @@ else
 	}
 
 	// Sorting
-	private string SortBy = "name";
-	private bool SortAscending = true;
+	private string SortBy = "UpdatedAt";
+	private bool SortAscending = false;
 
 	private async Task HandleSortChanged((string Column, bool Ascending) sort)
 	{

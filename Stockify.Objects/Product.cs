@@ -18,9 +18,9 @@ public class Product
     [Required]
     public string Name { get; set; }
     public virtual ICollection<StockAction> StockActions { get; set; } = new List<StockAction>();
-    public int TotalStock { get; set; }
-    public int AvailableStock { get; set; }
-    public int TotalStockActions { get; set; }
+    public int TotalStock { get; set; } = 0;
+    public int AvailableStock { get; set; } = 0;
+    public int TotalStockActions { get; set; } = 0;
     public DateTime? LastStockAction { get; set; }
 
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;

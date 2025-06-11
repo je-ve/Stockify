@@ -15,7 +15,6 @@ public class ProductService : IProductService
         product.CreatedById = currentUserId;
         product.UpdatedAt = DateTime.UtcNow;
         product.UpdatedById = currentUserId;
-
         _context.Products.Add(product);
         await _context.SaveChangesAsync();
     }
@@ -42,7 +41,7 @@ public class ProductService : IProductService
     public async Task RecalculateStock(Product product)
     {
         _context.Attach(product);
-        List<StockAction> actions = _context.StockActions.Where(sa=>sa.ProductId == product.Id).ToList();
+        List<StockAction> actions = _context.StockActions.Where(sa => sa.ProductId == product.Id).ToList();
         int TotalStock = actions.Sum(a => (int)a.Type * a.Quantity);
         int ReservedStock = actions.Where(a => a.Type == StockActionType.Reservation).Sum(a => a.Quantity);
         product.AvailableStock = TotalStock - ReservedStock;
@@ -94,4 +93,25 @@ public class ProductService : IProductService
 
         return new PaginatedResult<Product> { Items = items, TotalCount = totalCount };
     }
+
+    public async Task<List<(string ProductName, int TotalQuantity)>> GetTopProductsAsync()
+    {
+        return await _context.StockActions
+            .Where(sa => sa.OrderLineId != null)
+            .GroupBy(sa => sa.ProductId)
+            .Select(g => new
+            {
+                ProductId = g.Key,
+                TotalQuantity = g.Sum(sa => sa.Quantity)
+            })
+            .OrderByDescending(x => x.TotalQuantity)
+            .Take(10)
+            .Join(_context.Products,
+                  sa => sa.ProductId,
+                  p => p.Id,
+                  (sa, p) => new { p.Name, sa.TotalQuantity })
+            .Select(x => new ValueTuple<string, int>(x.Name, x.TotalQuantity))
+            .ToListAsync();
+    }
+
 }

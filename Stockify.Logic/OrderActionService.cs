@@ -12,24 +12,35 @@ public class OrderActionService : IOrderActionService
     private readonly IProductService productService;
     private readonly IOrderService orderService;
     private readonly IOrderLineService orderLineService;
-    public OrderActionService(StockifyContext context, IStockActionService stockActionService, IProductService productService, IOrderService orderService, IOrderLineService orderLineService)
+    private readonly IEmailService emailService;
+    public OrderActionService(StockifyContext context, IStockActionService stockActionService, IProductService productService, IOrderService orderService, IOrderLineService orderLineService, IEmailService emailService)
     {
         _context = context;
         this.stockActionService = stockActionService;
         this.productService = productService;
         this.orderService = orderService;
         this.orderLineService = orderLineService;
+        this.emailService = emailService;
     }
 
     public async Task CreateOrderAction(int orderId, OrderActionType type, string? userId = null)
     {
-        var order = await _context.Orders.FindAsync(orderId);
+        var order = await _context.Orders
+            .Include(o => o.Customer)
+            .Include(o => o.OrderLines)
+                .ThenInclude(ol => ol.Product)
+            .FirstOrDefaultAsync(o => o.Id == orderId);
+
         if (order == null) throw new InvalidOperationException($"Order with ID {orderId} not found.");
-        
+
         //Leveren
         //status aanpassen, stockacties aanpassen
         if (type == OrderActionType.Delivery)
         {
+
+            await emailService.SendEmailWithAttachmentAsync(order);
+            /*
+
             //Enkel nieuwe orders kunnen geleverd worden
             if (order.Status != OrderStatus.Created) throw new InvalidOperationException($"Order with ID {orderId} is not a new order.");
 
@@ -42,6 +53,8 @@ public class OrderActionService : IOrderActionService
             }
 
             order.Status = OrderStatus.Delivered;
+            */
+
         }
 
 
@@ -61,7 +74,7 @@ public class OrderActionService : IOrderActionService
                     await productService.RecalculateStock(stockAction.ProductId);
                 }
 
-                
+
             }
             order.Status = OrderStatus.Cancelled;
         }

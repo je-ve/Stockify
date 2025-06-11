@@ -14,6 +14,11 @@ public class Customer
     }
 
     [Required]
+    [EmailAddress(ErrorMessage = "Ongeldig e-mailadres")]
+    [StringLength(100, ErrorMessage = "Het e-mailadres is te lang")]
+    public string Email { get; set; } = "test@test.test";
+
+    [Required]
     [StringLength(50, ErrorMessage = "De naam is te lang")]
     public string Name { get; set; }
 

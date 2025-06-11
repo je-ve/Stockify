@@ -157,7 +157,7 @@ else
 					<td>@action.Type</td>
 					<td>@action.Quantity</td>
 					<td>@action.CreatedAt.ToBelgianFormat()</td>
-					<td>""</td>
+					<td>@action.OrderLine?.OrderId</td>
 				</tr>
 			}
 		</tbody>

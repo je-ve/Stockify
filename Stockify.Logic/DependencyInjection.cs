@@ -16,8 +16,10 @@ public static class DependencyInjection
         services.AddScoped<IOrderActionService, OrderActionService>();
         services.AddScoped<IStockActionService, StockActionService>();
         services.AddScoped<IProductService, ProductService>();
-        services.AddScoped<IUserService, UserService>();        
+        services.AddScoped<IUserService, UserService>();
+        services.AddScoped<IMessageService, MessageService>();
         services.AddSingleton<IToastService, ToastService>();
+        services.AddScoped<IEmailService, EmailService>();
 
         return services;
     }

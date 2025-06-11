@@ -131,6 +131,7 @@ public class OrderService : IOrderService
         // Apply sorting
         query = (sortBy.ToLower(), ascending) switch
         {
+            ("updatedat", false) => query.OrderByDescending(c => c.UpdatedAt),
             ("customernumber", true) => query.OrderBy(c => c.Customer.Id),
             ("customernumber", false) => query.OrderByDescending(c => c.Customer.Id),
             ("customername", true) => query.OrderBy(c => c.Customer.Name),
@@ -141,9 +142,8 @@ public class OrderService : IOrderService
             ("createdat", false) => query.OrderByDescending(c => c.CreatedAt),
             ("updatedby", true) => query.OrderBy(c => c.UpdatedBy.UserName),
             ("updatedby", false) => query.OrderByDescending(c => c.UpdatedBy.UserName),
-            ("updatedat", true) => query.OrderBy(c => c.UpdatedAt),
-            ("updatedat", false) => query.OrderByDescending(c => c.UpdatedAt),
-            _ => query.OrderBy(c => c.Id) // default
+            ("updatedat", true) => query.OrderBy(c => c.UpdatedAt),            
+            _ => query.OrderByDescending(c => c.UpdatedAt) // default
         };
 
         var totalCount = await query.CountAsync();

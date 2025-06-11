@@ -110,7 +110,6 @@ public class StockActionService : IStockActionService
         }
     }
 
-
     public async Task UpdateReservations(List<OrderLine> orderLines)
     {
         foreach (var orderLine in orderLines)
@@ -129,8 +128,6 @@ public class StockActionService : IStockActionService
 
     public async Task UpdateReservations(Order order)
     {
-
-        // klopt dit, wat als alle orderlines verwijderd zijn? Kan niet in principe...
         if (order == null || order.OrderLines == null || !order.OrderLines.Any())
         {
             return; // No lines to update
@@ -138,10 +135,9 @@ public class StockActionService : IStockActionService
         await UpdateReservations(order.OrderLines.ToList()); // Update all order lines in the order
     }
 
-
     public async Task DeleteReservation(OrderLine orderLine)
     {
-        var action = await _context.StockActions.FirstOrDefaultAsync(sa => sa.OrderLineId == orderLine.Id && sa.Type == StockActionType.Reservation);
+        var action = await _context.StockActions.FirstOrDefaultAsync(sa => sa.OrderLineId == orderLine.Id); // && sa.Type == StockActionType.Reservation);
         if (action != null)
         {
             _context.StockActions.Remove(action);

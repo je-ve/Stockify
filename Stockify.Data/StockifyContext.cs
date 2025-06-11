@@ -14,6 +14,7 @@ public class StockifyContext : IdentityDbContext<ApplicationUser>
     public DbSet<OrderAction> OrderActions { get; set; }
     public DbSet<Product> Products { get; set; }
     public DbSet<StockAction> StockActions { get; set; }
+    public DbSet<Message> Messages { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

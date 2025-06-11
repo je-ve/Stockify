@@ -63,6 +63,8 @@ public class CustomerService : ICustomerService
         {
             ("name", true) => query.OrderBy(c => c.Name),
             ("name", false) => query.OrderByDescending(c => c.Name),
+            ("email", true) => query.OrderBy(c => c.Email),
+            ("email", false) => query.OrderByDescending(c => c.Email),
             ("city", true) => query.OrderBy(c => c.City),
             ("city", false) => query.OrderByDescending(c => c.City),
             ("createdby", true) => query.OrderBy(c => c.CreatedBy.UserName),
@@ -89,4 +91,27 @@ public class CustomerService : ICustomerService
             TotalCount = totalCount
         };
     }
+
+    public async Task<List<(string CustomerName, int TotalQuantity)>> GetTopCustomersAsync()
+    {
+        return await _context.OrderLines
+            .Where(ol => ol.Order.Status == OrderStatus.Created || ol.Order.Status == OrderStatus.Delivered)
+            .Select(ol => new
+            {
+                CustomerName = ol.Order.Customer.Name,
+                Quantity = ol.Quantity
+            })
+            .GroupBy(x => x.CustomerName)
+            .Select(g => new
+            {
+                CustomerName = g.Key,
+                TotalQuantity = g.Sum(x => x.Quantity)
+            })
+            .OrderByDescending(x => x.TotalQuantity)
+            .Take(10)
+            .Select(x => new ValueTuple<string, int>(x.CustomerName, x.TotalQuantity))
+            .ToListAsync();
+    }
+
+
 }

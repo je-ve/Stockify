@@ -3,7 +3,8 @@ namespace Stockify.Web.ViewModels;
 
 public class ProductInputModel
 {
-    [Required(ErrorMessage = "Serienummer is verplicht")]    
+    [Required(ErrorMessage = "Serienummer is verplicht")]
+    [RegularExpression(@"^\d{6}$", ErrorMessage = "Serienummer moet exact 6 cijfers bevatten")]
     public long SerialNumber { get; set; }
 
 

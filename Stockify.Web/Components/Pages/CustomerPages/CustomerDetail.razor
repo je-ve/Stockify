@@ -48,10 +48,34 @@ else
 						<button type="button" class="btn-close" @onclick="HideEditModal"></button>
 					</div>
 					<div class="modal-body">
-						<InputText class="form-control mb-2" @bind-Value="EditModel.Name" placeholder="Naam" />
-						<InputText class="form-control mb-2" @bind-Value="EditModel.Street" placeholder="Straat" />
-						<InputText class="form-control mb-2" @bind-Value="EditModel.Zipcode" placeholder="Postcode" />
-						<InputText class="form-control mb-2" @bind-Value="EditModel.City" placeholder="Plaats" />
+						<div class="mb-3">
+							<label class="form-label">Naam</label>
+							<InputText class="form-control" @bind-Value="EditModel.Name" />
+							<ValidationMessage For="@(() => EditModel.Name)" />
+						</div>
+						<div class="mb-3">
+							<label class="form-label">Email</label>
+							<InputText class="form-control" @bind-Value="EditModel.Email" />
+							<ValidationMessage For="@(() => EditModel.Email)" />
+						</div>
+						<div class="mb-3">
+							<label class="form-label">Adres</label>
+							<InputText class="form-control" @bind-Value="EditModel.Street" />
+							<ValidationMessage For="@(() => EditModel.Street)" />
+						</div>
+						<div class="mb-3">
+							<label class="form-label">Postcode</label>
+							<InputText class="form-control" @bind-Value="EditModel.Zipcode" />
+							<ValidationMessage For="@(() => EditModel.Zipcode)" />
+						</div>
+						<div class="mb-3">
+							<label class="form-label">Plaats</label>
+							<InputText class="form-control" @bind-Value="EditModel.City" />
+							<ValidationMessage For="@(() => EditModel.City)" />
+						</div>
+
+
+
 					</div>
 					<div class="modal-footer">
 						<button class="btn btn-secondary" @onclick="HideEditModal">Annuleren</button>
@@ -79,7 +103,7 @@ else
 				</div>
 				<div class="modal-footer">
 					<button class="btn btn-secondary" @onclick="HideDeleteDialog">Annuleren</button>
-					<button class="btn btn-danger" @onclick="DeleteCustomer">Verwijderen</button>
+					<button class="btn btn-danger" disabled @onclick="DeleteCustomer">Verwijderen</button>
 				</div>
 			</div>
 		</div>
@@ -120,6 +144,7 @@ else
 			EditModel = new CustomerInputModel
 				{
 					Name = Customer.Name,
+					Email = Customer.Email,
 					Street = Customer.Street,
 					Zipcode = Customer.ZipCode,
 					City = Customer.City
@@ -139,6 +164,7 @@ else
 		if (Customer == null) return;
 
 		Customer.Name = EditModel.Name;
+		Customer.Email = EditModel.Email;
 		Customer.Street = EditModel.Street;
 		Customer.ZipCode = EditModel.Zipcode;
 		Customer.City = EditModel.City;
@@ -146,14 +172,14 @@ else
 		await svc.UpdateAsync(Customer, currentUserId);
 		ShowEdit = false;
 		await LoadCustomer();
-		ToastService.ShowSuccess($"Klant succesvol aangepast door {currentUserId}");
+		ToastService.ShowSuccess($"Klant is aangepast");
 	}
 
 	private async Task DeleteCustomer()
 	{
 		if (Customer == null) return;
 		await svc.DeleteAsync(Customer.Id);
-		ToastService.ShowSuccess("Klant succesvol verwijderd.");
+		ToastService.ShowSuccess("Klant verwijderd!");
 		NavigationManager.NavigateTo("/customers");
 	}
 }

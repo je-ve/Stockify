@@ -5,6 +5,10 @@ public class CustomerInputModel
     [Required(ErrorMessage = "Naam is verplicht")]
     public string Name { get; set; }
 
+    [Required]
+    [EmailAddress]
+    public string Email { get; set; }
+
     [Required(ErrorMessage = "Straat is verplicht")]
     public string Street { get; set; }
 

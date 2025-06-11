@@ -1,0 +1,82 @@
+﻿@inject IJSRuntime JSRuntime
+
+<div id="@ChartId" style="width: 100%; height: 100%;"></div>
+
+@code {
+    // Unique ID for the chart's div element to prevent conflicts if multiple charts are on a page
+    [Parameter]
+    public string ChartId { get; set; } = $"googleBarChart_{Guid.NewGuid().ToString("N")}";
+
+    // Parameter to receive the data for the chart
+    [Parameter]
+    [EditorRequired] // Marks this parameter as required
+    public List<(string Naam, int Value)> ChartData { get; set; } = new List<(string Naam, int Value)>();
+        
+    [Parameter]
+    public string Title { get; set; } = "Chart Title";
+
+    // Optional: Customize chart subtitle
+    [Parameter]
+    public string Subtitle { get; set; } = "Chart Subtitle";
+        
+    // [Parameter]
+    // public string Width { get; set; } = "900px";
+
+    // [Parameter]
+    // public string Height { get; set; } = "500px";
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        // This method is called after the component has rendered.
+        // 'firstRender' is true only once, when the component is initially rendered
+        // to the browser (i.e., after prerendering or on first client-side load).
+        if (firstRender)
+        {
+            // We can safely call JS interop here.
+            await DrawChart();
+        }
+    }
+
+    private async Task DrawChart()
+    {        
+        if (ChartData == null || !ChartData.Any())
+        {
+            return;
+        }
+
+     
+        // First row is headers
+        var googleChartFormattedData = new List<object[]>
+        {
+            new object[] { "Naam", "Aantal" } // Headers for your (Naam, int) tuple
+        };
+
+        // Add the actual data points
+        foreach (var item in ChartData)
+        {
+            googleChartFormattedData.Add(new object[] { item.Naam, item.Value });
+        }
+
+        // Prepare the options for Google Charts
+        var chartOptions = new
+        {
+            chart = new
+            {
+                title = Title                
+            },
+            bars = "horizontal", // Required for Material Bar Chart
+            // Add other static options here as needed.
+            legend = new { position = "none" },
+            hAxis = new { title = "" }, // Titels verwijderen
+            vAxis = new { title = "" }  
+        };
+
+        // Invoke the JavaScript function to draw the chart
+        await JSRuntime.InvokeVoidAsync(
+            "chartInterop.drawBarChart",
+            ChartId,                  // The ID of the div where the chart will be drawn
+            googleChartFormattedData, // The prepared data
+            chartOptions              // The chart options
+        );
+    }
+}

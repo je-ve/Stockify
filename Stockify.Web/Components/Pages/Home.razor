@@ -1,7 +1,282 @@
-﻿@attribute [Authorize]
+﻿@rendermode InteractiveServer
+@inject IProductService productSvc
+@inject ICustomerService customerSvc
+@inject IMessageService messageSvc
+@inject IUserService userSvc
+@inject IToastService toastService
+@inject AuthenticationStateProvider AuthenticationStateProvider
+@attribute [Authorize]
 
 @page "/"
 @using Microsoft.AspNetCore.Authorization
-<PageTitle>Home</PageTitle>
-<h1>Hello, world!</h1>
-		Welcome to your new app.
+@using Stockify.Extensions
+<PageTitle>Dashboard</PageTitle>
+
+@if (IsLoading)
+{
+	<div class="d-flex justify-content-center my-4">
+		<div class="spinner-border text-primary" role="status">
+			<span class="visually-hidden">Laden...</span>
+		</div>
+	</div>
+}
+else
+{
+	<div class="container-fluid mt-5">
+
+		<div class="row mb-4">
+			@* 2/3 for top 10 *@
+			<div class="col-lg-8 col-md-12">
+				<div class="row mb-4">
+					<div class="col-lg-3 col-md-12 px-0">
+						<h6>Top 10 producten</h6>
+						<ol>
+							@foreach (var (name, qty) in topProducts)
+							{
+								<li class="small">@name: @qty</li>
+							}
+						</ol>
+					</div>
+					<div class="col-lg-9 col-md-12 px-0">
+						@if (topProducts != null && topProducts.Count > 0)
+						{
+							<Stockify.Web.Components.Shared.BarChart ChartData="@topProducts" Title="Totaal aantal bestelde en geleverde producten" />
+						}
+						else
+						{
+							<p>Loading chart data...</p>
+						}
+					</div>
+				</div>
+
+				@* Top 10 klanten*@
+				<div class="row">
+					<div class="col-lg-3 col-md-12 px-0">
+						<h6>Top 10 klanten</h6>
+						<ol>
+							@foreach (var (name, qty) in topCustomers)
+							{
+								<li class="small">@name: @qty</li>
+							}
+						</ol>
+					</div>
+					<div class="col-lg-9 col-md-12 px-0">
+						@if (topCustomers != null && topCustomers.Count > 0)
+						{
+							<Stockify.Web.Components.Shared.BarChart ChartData="@topCustomers" Title="Aantal bestelde en geleverde producten per klant" />
+						}
+						else
+						{
+							<p>Loading chart data...</p>
+						}
+					</div>
+				</div>
+			</div>
+
+
+			@* Berichten, 1/3 *@
+			<div class="col-lg-4 col-md-12 ps-lg-4">
+				<button class="btn btn-ternary mb-3" @onclick="ShowAddMessageModal">
+					<i class="bi bi-plus-lg"></i> Nieuw bericht
+				</button>
+
+				@* Messages Card *@
+				<div class="overflow-auto" style="max-height: 60%;">
+					<div class="card-header">
+						<h6 class="text-center">Berichten</h6>
+					</div>
+					<div class="card-body pe-lg-2">
+						@if (messages != null && messages.Any())
+						{
+							@foreach (Message message in messages)
+							{
+								<div class="card mb-2 @(message.HighPriority ? "border-danger" : "")">
+									<div class="card-body p-2">
+										<p class="card-text mb-0">
+											@if (message.RecipientId != null)
+											{
+												<span class="small fw-bold">Privébericht</span>
+											}
+											else
+											{
+												<span class="small fw-bold">Algemeen bericht</span>
+											}
+										</p>
+										<small class="text-muted d-flex justify-content-between">
+											<span>Van: @message.CreatedByName</span>
+											<span>@message.CreatedAt.ToBelgianFormat()</span>
+										</small>
+										<p class="card-text mb-0 mt-2 fw-normal small">@message.Content</p>
+									</div>
+								</div>
+							}
+						}
+						else
+						{
+							<p class="text-muted">Geen berichten om weer te geven.</p>
+						}
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+}
+
+
+@if (showAddMessage)
+{
+	<EditForm Model="@NewMessage" OnValidSubmit="SaveNewMessage">
+		<DataAnnotationsValidator />
+		<ValidationSummary />
+		<div class="modal fade show d-block" tabindex="-1">
+			<div class="modal-dialog">
+				<div class="modal-content">
+					<div class="modal-header">
+						<h5 class="modal-title">Nieuw bericht</h5>
+						<button type="button" class="btn-close" @onclick="HideAddMessageModal"></button>
+					</div>
+					<div class="modal-body">
+						<div class="mb-3">
+							<label class="form-label">Prioriteit hoog?</label>
+							<div class="form-check form-switch">
+								<InputCheckbox class="form-check-input" @bind-Value="NewMessage.HighPriority" id="highPrioritySwitch" />
+								<label class="form-check-label" for="highPrioritySwitch"></label>
+							</div>
+							<ValidationMessage For="@(() => NewMessage.HighPriority)" />
+						</div>
+						<div class="mb-3">
+							<label class="form-label" Bericht>Bericht</label>
+							<InputTextArea id="bericht" class="form-control" @bind-Value="NewMessage.Content" rows="3" />
+							<ValidationMessage For="@(() => NewMessage.Content)" />
+						</div>
+
+						<div class="mb-3">
+							<label class="form-label">Privébericht?</label>
+							<div class="form-check form-switch">
+								<InputCheckbox class="form-check-input" @bind-Value="NewMessage.PrivateMessage" id="iPrivateSwitch" />
+								<label class="form-check-label" for="isPrivateSwitch"></label>
+							</div>
+						</div>
+
+						@if (NewMessage.PrivateMessage)
+						{
+							<div class="mb-3">
+								<label for="userDropdown" class="form-label">Select User:</label>
+								<InputSelect id="userDropdown" class="form-select" @bind-Value="NewMessage.RecipientId">
+									<option value="">-- Select an email --</option>
+									@foreach (var user in users)
+									{
+										<option value="@user.Id">@user.Email</option>
+									}
+								</InputSelect>
+								<ValidationMessage For="@(() => NewMessage.RecipientId)" />
+							</div>
+						}
+
+					</div>
+					<div class="modal-footer">
+						<button type="button" class="btn btn-secondary" @onclick="HideAddMessageModal" disabled="@IsSaving">Annuleren</button>
+						<button type="submit" class="btn btn-primary" disabled="@IsSaving">
+							@if (IsSaving)
+							{
+								<span class="spinner-border spinner-border-sm me-2"></span>
+							}
+							Verzend bericht
+						</button>
+					</div>
+				</div>
+			</div>
+		</div>
+		<div class="modal-backdrop fade show"></div>
+	</EditForm>
+}
+
+
+
+
+@code {
+	public bool IsLoading { get; set; } = true;
+	private List<(string ProductName, int TotalQuantity)> topProducts = new List<(string ProductName, int TotalQuantity)>();
+	private List<(string CustomerName, int TotalQuantity)> topCustomers = new List<(string CustomerName, int TotalQuantity)>();
+	private string? currentUserId;
+	private List<Message> messages = new List<Message>();
+	private bool IsSaving = false;
+	private List<UserViewModel> users = new List<UserViewModel>();
+
+	protected override async Task OnInitializedAsync()
+	{
+		await LoadData();
+	}
+
+	private async Task LoadData()
+	{
+		IsLoading = true;
+		topProducts = await productSvc.GetTopProductsAsync();
+		topCustomers = await customerSvc.GetTopCustomersAsync();
+		var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+		var user = authState.User;
+
+		if (user.Identity?.IsAuthenticated ?? false)
+		{
+			currentUserId = user.FindFirst(c => c.Type == "sub")?.Value // OpenID Connect "sub" claim
+						?? user.FindFirst(c => c.Type == ClaimTypes.NameIdentifier)?.Value; // fallback
+		}
+
+		users = new List<UserViewModel>();
+		var result = await userSvc.GetAllAsync();
+		result.ForEach(u => users.Add(new UserViewModel { Email = u.UserName, Id = u.Id }));
+		messages = await messageSvc.GetByRecipientIdAsync(currentUserId);
+		IsLoading = false;
+	}
+
+
+
+
+
+
+	//Add new message
+	private bool showAddMessage = false;
+	private MessageInputModel NewMessage = new MessageInputModel();
+
+	private void ShowAddMessageModal()
+	{
+		showAddMessage = true;
+		NewMessage = new MessageInputModel(); // Reset the model for a new message
+		NewMessage.CreatedById = currentUserId; // Set the current user ID
+	}
+
+	private void HideAddMessageModal()
+	{
+		showAddMessage = false;
+	}
+
+	private async Task SaveNewMessage()
+	{
+		if (IsSaving)
+			return;
+		IsSaving = true;
+		try
+		{
+			if (!NewMessage.PrivateMessage || string.IsNullOrEmpty(NewMessage.RecipientId))
+			{
+				NewMessage.RecipientId = null;  //Ontvanger moet null zijn indien geen privebericht
+			}
+
+			//    public async Task AddAsync(bool highPriority, string content, string currentUserId, string? recipientId = null)
+			await messageSvc.AddAsync(NewMessage.HighPriority, NewMessage.Content, currentUserId, NewMessage.RecipientId);
+			showAddMessage = false;
+			NewMessage = new MessageInputModel();
+			await LoadData(); // aanpassen naar load messages
+			toastService.ShowSuccess("Bericht verzonden!");
+		}
+		catch (Exception ex)
+		{
+			Console.Error.WriteLine($"Error saving message: {ex.Message}");
+			toastService.ShowError("Er is iets mis gegaan");
+		}
+		finally
+		{
+			IsSaving = false;
+		}
+	}
+}

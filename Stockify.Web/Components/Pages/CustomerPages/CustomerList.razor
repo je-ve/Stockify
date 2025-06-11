@@ -10,7 +10,7 @@
 
 <h3>Klanten</h3>
 
-@if (IsLoading)
+@if(IsLoading)
 {
 	<div class="d-flex justify-content-center my-4">
 		<div class="spinner-border text-primary" role="status">
@@ -38,6 +38,9 @@ else
 				<SortableHeader SortColumn="name" CurrentSortBy="@SortBy" SortAscending="@SortAscending" OnSortChanged="HandleSortChanged">
 					Naam
 				</SortableHeader>
+				<SortableHeader SortColumn="email" CurrentSortBy="@SortBy" SortAscending="@SortAscending" OnSortChanged="HandleSortChanged">
+					Email
+				</SortableHeader>
 				<SortableHeader SortColumn="city" CurrentSortBy="@SortBy" SortAscending="@SortAscending" OnSortChanged="HandleSortChanged">
 					Adres
 				</SortableHeader>
@@ -61,8 +64,9 @@ else
 				<tr>
 					<td><a href="customer/@customer.Id">@customer.Number</a></td>
 					<td>@customer.Name</td>
-					<td>@customer.Address</td>
-					<td>@customer?.CreatedBy?.Id</td>
+					<td>@customer.Email</td>
+					<td>@customer.Address</td>					
+					<td>@customer?.CreatedBy?.UserName</td>
 					<td>@customer.CreatedAt.ToBelgianFormat()</td>
 					<td>@customer?.UpdatedBy?.UserName</td>
 					<td>@customer.UpdatedAt.ToBelgianFormat()</td>
@@ -70,7 +74,6 @@ else
 			}
 		</tbody>
 	</table>
-
 	<Pagination CurrentPage="@CurrentPage" TotalPages="@TotalPages" OnPageChanged="ChangePage" />
 }
 
@@ -93,7 +96,12 @@ else
 							<ValidationMessage For="@(() => NewCustomer.Name)" />
 						</div>
 						<div class="mb-3">
-							<label class="form-label">Straat</label>
+							<label class="form-label">Email</label>
+							<InputText class="form-control" @bind-Value="NewCustomer.Email" />
+							<ValidationMessage For="@(() => NewCustomer.Email)" />
+						</div>
+						<div class="mb-3">
+							<label class="form-label">Adres</label>
 							<InputText class="form-control" @bind-Value="NewCustomer.Street" />
 							<ValidationMessage For="@(() => NewCustomer.Street)" />
 						</div>
@@ -167,6 +175,7 @@ else
 			var customer = new Customer
 				{
 					Name = NewCustomer.Name,
+					Email = NewCustomer.Email,
 					Street = NewCustomer.Street,
 					ZipCode = NewCustomer.Zipcode,
 					City = NewCustomer.City
@@ -211,8 +220,8 @@ else
 	}
 
 	// Sorting
-	private string SortBy = "name";
-	private bool SortAscending = true;
+	private string SortBy = "UpdatedAt";
+	private bool SortAscending = false;
 
 	private async Task HandleSortChanged((string Column, bool Ascending) sort)
 	{
