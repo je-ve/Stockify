@@ -6,7 +6,8 @@
 @using System.Text.Encodings.Web
 @using Microsoft.AspNetCore.Identity
 
-
+@inject NavigationManager NavManager
+@inject IJSRuntime JS
 @inject UserManager<ApplicationUser> UserManager
 @inject IdentityUserAccessor UserAccessor
 @inject UrlEncoder UrlEncoder
@@ -37,8 +38,11 @@ else
                 </p>
             </li>
             <li>
-                <p>Scan de QR Code of geef deze sleutel <kbd>@sharedKey</kbd> in in je twee factor authenticator app.</p>
+                <p>Scan de QR Code of geef deze sleutel <kbd>@sharedKey</kbd> in in je twee factor authenticator app. Herlaad de pagina indien deze niet zichtbaar is.</p>
                 @* <div class="alert alert-info">Bekijk hier <a href="https://go.microsoft.com/fwlink/?Linkid=852423">enable QR code generation</a>.</div> *@
+
+                @* <button class="btn btn-danger" @onclick="ReloadHard">Reload Page</button> *@
+
                 <div></div>
                 <div id="qrCodeData" data-url="@authenticatorUri"></div>
                 <div id="qrCode"></div>
@@ -85,9 +89,10 @@ else
 
     protected override async Task OnInitializedAsync()
     {
-        user = await UserAccessor.GetRequiredUserAsync(HttpContext);
+        user = await UserAccessor.GetRequiredUserAsync(HttpContext);        
+        await LoadSharedKeyAndQrCodeUriAsync(user);        
+        StateHasChanged();
 
-        await LoadSharedKeyAndQrCodeUriAsync(user);
     }
 
     private async Task OnValidSubmitAsync()
@@ -108,7 +113,7 @@ else
         var userId = await UserManager.GetUserIdAsync(user);
         Logger.LogInformation("User with ID '{UserId}' has enabled 2FA with an authenticator app.", userId);
 
-        message = "Your authenticator app has been verified.";
+        message = "Uw authenticator app is geverifieerd";
 
         if (await UserManager.CountRecoveryCodesAsync(user) == 0)
         {
@@ -134,6 +139,7 @@ else
 
         var email = await UserManager.GetEmailAsync(user);
         authenticatorUri = GenerateQrCodeUri(email!, unformattedKey!);
+        StateHasChanged();
     }
 
     private string FormatKey(string unformattedKey)
@@ -171,4 +177,11 @@ else
         [Display(Name = "Verification Code")]
         public string Code { get; set; } = "";
     }
+    
+    private async Task ReloadHard()
+    {
+        await JS.InvokeVoidAsync("reloadPage");
+    }
+
+
 }

@@ -8,6 +8,8 @@
 @inject AuthenticationStateProvider AuthenticationStateProvider
 @attribute [Authorize]
 
+@*Overview of customers, with modal to add a new customer*@
+
 <h3>Klanten</h3>
 
 @if (IsLoading)
@@ -30,8 +32,8 @@ else
 	<div class="d-flex justify-content-end mb-2">
 
 		<PageSizeSelector PageSize="@PageSize" OnPageSizeChanged="ChangePageSize" />
-		<div class="mb-2">
-			<button class="btn btn-light text-secondary" @onclick="ShowModal">
+		<div class="mb-2 ms-2">
+			<button class="btn btn-light text-secondary border border-1" @onclick="ShowModal">
 				<span><i class="bi bi-plus-lg"></i> Nieuwe klant</span>
 			</button>
 		</div>
@@ -67,7 +69,7 @@ else
 		<tbody>
 			@foreach (var customer in Customers)
 			{
-				<tr>
+				<tr class="small">
 					<td><a href="customer/@customer.Id">@customer.Number</a></td>
 					<td>@customer.Name</td>
 					<td>@customer.Email</td>
@@ -195,7 +197,7 @@ else
 
 			await svc.AddAsync(customer, currentUserId);
 			await LoadCustomersData();
-			ToastService.ShowSuccess("Klant succesvol toegevoegd.");
+			ToastService.ShowSuccess("Klant toegevoegd.");
 			HideModal();
 		}
 		catch

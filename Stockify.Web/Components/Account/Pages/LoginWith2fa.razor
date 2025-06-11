@@ -10,11 +10,10 @@
 
 <PageTitle>Two-factor authentication</PageTitle>
 
-<h1>Two-factor authentication</h1>
 <hr />
 <StatusMessage Message="@message" />
-<p>Your login is protected with an authenticator app. Enter your authenticator code below.</p>
-<div class="row">
+<p class="text-center mb-4 mt-5"> Uw login is beschermd met twee-factor authenticatie. Geef uw authenticator code hieronder in.</p>
+<div class="row justify-content-center">
     <div class="col-md-4">
         <EditForm Model="Input" FormName="login-with-2fa" OnValidSubmit="OnValidSubmitAsync" method="post">
             <input type="hidden" name="ReturnUrl" value="@ReturnUrl" />
@@ -29,7 +28,7 @@
             <div class="checkbox mb-3">
                 <label for="remember-machine" class="form-label">
                     <InputCheckbox @bind-Value="Input.RememberMachine" />
-                    Remember this machine
+                    Dit toestel onthouden
                 </label>
             </div>
             <div>
@@ -38,10 +37,10 @@
         </EditForm>
     </div>
 </div>
-<p>
+@* <p>
     Don't have access to your authenticator device? You can
     <a href="Account/LoginWithRecoveryCode?ReturnUrl=@ReturnUrl">log in with a recovery code</a>.
-</p>
+</p> *@
 
 @code {
     private string? message;

@@ -53,5 +53,6 @@ public class Customer
 
     [NotMapped]
     public string Address { get { return $"{Street} {HouseNumber}, {ZipCode} {City}"; } }
+    public bool IsActive { get; set; } = true;
 }
 

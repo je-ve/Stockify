@@ -22,9 +22,7 @@ public class Product
     public int AvailableStock { get; set; } = 0;
     public int TotalStockActions { get; set; } = 0;
     public DateTime? LastStockAction { get; set; }
-
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
-
     public string? CreatedById { get; set; }
 
     [ForeignKey(nameof(CreatedById))]
@@ -35,4 +33,5 @@ public class Product
 
     [ForeignKey(nameof(UpdatedById))]
     public ApplicationUser? UpdatedBy { get; set; }
+    public bool IsActive { get; set; } = true;
 }

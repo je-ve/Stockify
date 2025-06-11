@@ -11,6 +11,6 @@ public class EditPasswordViewModel
 
     [Required]
     [DataType(DataType.Password)]
-    [Compare(nameof(Password), ErrorMessage = "Passwords do not match.")]
+    [Compare(nameof(Password), ErrorMessage = "Passwoorden komen niet overeen.")]
     public string ConfirmPassword { get; set; } = string.Empty;
 }

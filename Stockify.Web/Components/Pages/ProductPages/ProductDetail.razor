@@ -11,6 +11,13 @@
 
 @attribute [Authorize]
 
+@*Product detail page. Contains a header card with details. Buttons to edit name and serial number, and a button to delete the product.
+	This is a soft delete, the IsActive property will be set to false and the product can no longer be added to new and existing order.
+	It is still visible when viewing existing orders. 
+	Page also contains a table with the product stockactions, and buttons to add or remove stock for this product.
+	Modals for deleting or editing product, and adding or removing stock
+*@
+
 <h3>Productfiche @Product?.Name</h3>
 
 @if (IsLoading)
@@ -44,10 +51,10 @@ else
 				</div>
 
 				<div class="btn-group mt-1 mt-md-0">
-					<button class="btn btn-primary me-2" @onclick="ShowEditModal">
+					<button class="btn btn-primary me-2" disabled="@(!IsActive)" @onclick="ShowEditModal">
 						<i class="bi bi-pencil-square"></i> Bewerken
 					</button>
-					<button class="btn btn-danger" @onclick="ShowDeleteConfirmation">
+					<button class="btn btn-danger" disabled="@(!IsActive)" @onclick="ShowDeleteConfirmation">
 						<i class="bi bi-trash"></i> Verwijderen
 					</button>
 				</div>
@@ -70,8 +77,16 @@ else
 						<button type="button" class="btn-close" @onclick="HideEditModal"></button>
 					</div>
 					<div class="modal-body">
-						<label class="form-label">Naam</label><InputText class="form-control mb-2" @bind-Value="EditModel.Name" placeholder="Naam" />
-						<label class="form-label">Serienummer</label><InputNumber class="form-control mb-2" @bind-Value="EditModel.SerialNumber" placeholder="Serienummer" />
+						<div class="mb-3">
+							<label class="form-label">Naam</label>
+							<InputText class="form-control mb-2" @bind-Value="EditModel.Name" placeholder="Naam" />
+							<ValidationMessage For="@(() => EditModel.Name)" />
+						</div>
+						<div class="mb-3">
+							<label class="form-label">Serienummer</label>
+							<InputNumber class="form-control mb-2" @bind-Value="EditModel.SerialNumber" placeholder="Serienummer" />
+							<ValidationMessage For="@(() => EditModel.SerialNumber)" />
+						</div>
 					</div>
 					<div class="modal-footer">
 						<button class="btn btn-secondary" @onclick="HideEditModal">Annuleren</button>
@@ -118,7 +133,7 @@ else
 	<p>Geen voorraadbewerkingen gevonden.</p>
 
 	<div class="mb-2">
-		<button class="btn btn-light" @onclick="@(() => ShowModal(StockActionType.Addition))">
+		<button class="btn btn-light" disabled="@(!IsActive)" @onclick="@(() => ShowModal(StockActionType.Addition))">
 			<i class="bi bi-plus-lg"> Voeg voorraad toe</i>
 		</button>
 	</div>
@@ -128,10 +143,10 @@ else
 	<div class="d-flex justify-content-end mb-1">
 		<PageSizeSelector PageSize="@PageSize" OnPageSizeChanged="ChangePageSize" />
 		<span>
-			<button class="btn btn-outline-success btn-sm ms-3 me-1" @onclick="@(() => ShowModal(StockActionType.Addition))">
+			<button class="btn btn-outline-success btn-sm ms-3 me-1" disabled="@(!IsActive)" @onclick="@(() => ShowModal(StockActionType.Addition))">
 				<i class="bi bi-plus-lg"></i>
 			</button>
-			<button class="btn btn-outline-danger btn-sm" @onclick="@(() => ShowModal(StockActionType.Reduction))">
+			<button class="btn btn-outline-danger btn-sm" disabled="@(!IsActive)" @onclick="@(() => ShowModal(StockActionType.Reduction))">
 				<i class="bi bi-dash-lg"></i>
 			</button>
 		</span>
@@ -221,6 +236,7 @@ else
 	private bool ShowEdit = false;
 	private bool ShowDeleteDialog = false;
 	private StockActionType _selectedType;
+	private bool IsActive = true;
 
 	protected override async Task OnInitializedAsync()
 	{
@@ -242,6 +258,7 @@ else
 		Product = await productSvc.GetByIdAsync(Id);
 		if (Product != null)
 		{
+			IsActive = Product.IsActive;
 			EditModel = new ProductInputModel
 				{
 					Name = Product.Name,
@@ -274,9 +291,17 @@ else
 	{
 		if (Product == null) return;
 
-		await productSvc.DeleteAsync(Product.Id);
-		ToastService.ShowSuccess("Product verwijderd.");
-		NavigationManager.NavigateTo("/products");
+		if (Product.TotalStock > 0)
+		{
+			ToastService.ShowError("Enkel producten zonder voorraad kunnen verwijderd worden.");
+			ShowDeleteDialog = false;
+		}
+		else
+		{
+			await productSvc.SetInactiveAsync(Product.Id, currentUserId);
+			ToastService.ShowSuccess("Product verwijderd!");
+			NavigationManager.NavigateTo("/products");
+		}
 	}
 
 	@*Actielijst code*@

@@ -35,7 +35,7 @@ internal class Program
 
         builder.Services.AddSwaggerGen(c =>
         {
-            c.SwaggerDoc("v1", new OpenApiInfo { Title = "CarsApiExample", Version = "v1" });
+            c.SwaggerDoc("v1", new OpenApiInfo { Title = "Stockify API", Version = "v1" });
 
             // Add JWT Bearer Authorization to Swagger
             c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme

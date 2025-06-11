@@ -67,44 +67,9 @@ public class OrderController : ControllerBase
         });
         }
     }
-    /* Orderlines individueel aanpassen
-    [HttpPatch("{id}")]
-    public async Task<IActionResult> Update(int id, [FromBody] OrderDto order)
-    {
-        if (order == null || order.Lines == null || order.Lines.Count == 0)
-        {
-            return BadRequest("Invalid order data.");
-        }
+   
 
-        var existingOrder = await _orderService.GetByIdAsync(id);
-        if (existingOrder == null)
-        {
-            return NotFound("Order not found.");
-        }
-
-        try
-        {
-            existingOrder.CustomerId = order.customerId;
-            existingOrder.OrderLines.Clear(); // Clear existing lines before adding new ones
-            foreach (var line in order.Lines)
-            {
-                existingOrder.OrderLines.Add(new OrderLine { ProductId = line.ProductId, Quantity = line.Quantity });
-            }
-            await _orderService.UpdateAsync(existingOrder, "068a5f94-7b85-4831-9d74-b2bf62d460e1");
-            return Ok(new { Message = "Order updated successfully." });
-        }
-        catch (Exception ex)
-        {
-            return StatusCode(StatusCodes.Status500InternalServerError, new
-            {
-                message = "An error occurred while updating the order.",
-                error = ex.Message,
-                inner = ex.InnerException?.Message ?? ex.Message
-            });
-        }
-    }
-
-    */
+   
     //Enkel header aanpassen
 
     [HttpPatch("{id:int}")]    

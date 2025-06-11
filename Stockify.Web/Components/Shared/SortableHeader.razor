@@ -36,35 +36,3 @@
         await OnSortChanged.InvokeAsync((SortColumn, ascending));
     }
 }
-
-
-
-
-@*
-<th>
-	<button class="btn btn-link p-0" @onclick="OnClick">
-		@ChildContent
-		<i class="bi ms-1 @(IsSorted ? (SortAscending ? "bi-arrow-up" : "bi-arrow-down") : "invisible")"></i>
-	</button>
-</th>
-
-@code {
-	[Parameter] public string SortColumn { get; set; } = string.Empty;
-	[Parameter] public string CurrentSortBy { get; set; } = string.Empty;
-	[Parameter] public bool SortAscending { get; set; }
-	[Parameter] public EventCallback<(string Column, bool Ascending)> OnSortChanged { get; set; }
-	[Parameter] public RenderFragment? ChildContent { get; set; }
-
-	private bool IsSorted => CurrentSortBy == SortColumn;
-
-	private async Task OnClick()
-	{
-		bool newAsc = SortAscending;
-		if (IsSorted)
-			newAsc = !SortAscending;
-		else
-			newAsc = true;
-		await OnSortChanged.InvokeAsync((SortColumn, newAsc));
-	}
-}
-*@

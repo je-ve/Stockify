@@ -8,6 +8,12 @@
 @using Stockify.Web.Components.Shared
 @attribute [Authorize]
 
+@*Customer detail page. Show customer details, with modal to change all customer data
+As in most pages, the current logged in user id is retrieved from the authenticationstateprovider, 
+for logging. Also a delete button. This anonimizes the customer. Delivered orders will show placeholder data for the customer, only the zip-code is retained
+*@
+
+
 <h3>Klantdetails</h3>
 
 @if (IsLoading)
@@ -28,8 +34,8 @@ else
 		<div class="card-body">
 			<h5 class="card-title">@Customer.Name</h5>
 			<p class="card-text">@Customer.Street, @Customer.ZipCode @Customer.City</p>
-			<button class="btn btn-primary me-2" @onclick="ShowEditModal"><i class="bi bi-pencil-square"></i>Bijwerken</button>
-			<button class="btn btn-danger" @onclick="ShowDeleteConfirmation"><i class="bi bi-trash"></i>Verwijderen</button>
+			<button class="btn btn-primary me-2" disabled="@(!IsActive)" @onclick="ShowEditModal"><i class="bi bi-pencil-square"></i>Bijwerken</button>
+			<button class="btn btn-danger" disabled="@(!IsActive)" @onclick="ShowDeleteConfirmation"><i class="bi bi-trash"></i>Verwijderen</button>
 		</div>
 	</div>
 }
@@ -108,7 +114,7 @@ else
 				</div>
 				<div class="modal-footer">
 					<button class="btn btn-secondary" @onclick="HideDeleteDialog">Annuleren</button>
-					<button class="btn btn-danger" disabled @onclick="DeleteCustomer">Verwijderen</button>
+					<button class="btn btn-danger" @onclick="DeleteCustomer">Verwijderen</button>
 				</div>
 			</div>
 		</div>
@@ -125,6 +131,7 @@ else
 	private bool ShowEdit = false;
 	private bool ShowDeleteDialog = false;
 	private string? currentUserId;
+	private bool IsActive = true;
 
 	protected override async Task OnInitializedAsync()
 	{
@@ -143,9 +150,10 @@ else
 	private async Task LoadCustomer()
 	{
 		IsLoading = true;
-		Customer = await svc.GetByIdAsync(Id);
+		Customer = await svc.GetByIdAsync(Id);		
 		if (Customer != null)
 		{
+			IsActive = Customer.IsActive;			
 			EditModel = new CustomerInputModel
 				{
 					Name = Customer.Name,
@@ -184,9 +192,20 @@ else
 
 	private async Task DeleteCustomer()
 	{
-		if (Customer == null) return;
-		await svc.DeleteAsync(Customer.Id);
-		ToastService.ShowSuccess("Klant verwijderd!");
-		NavigationManager.NavigateTo("/customers");
+		try
+		{
+			if (Customer == null) return;
+			await svc.SetInactiveAsync(Customer.Id, currentUserId);
+			ToastService.ShowSuccess("Klant verwijderd!");
+			NavigationManager.NavigateTo("/customers");
+		}
+		catch (Exception ex)
+		{
+			ToastService.ShowError(ex.Message);
+		}
+		finally
+		{
+			ShowDeleteDialog = false;
+		}
 	}
 }

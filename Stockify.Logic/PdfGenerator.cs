@@ -17,7 +17,7 @@ public static class PdfGenerator
             {
                 page.Margin(40);
 
-                // HEADER with "Stockify" as brand name
+                // HEADER
                 page.Header().Row(row =>
                 {
                     row.RelativeItem().Column(col =>

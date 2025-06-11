@@ -30,7 +30,7 @@
         _visible = true;
 
         _timer?.Dispose();
-        _timer = new System.Timers.Timer(7000); // 3 seconds
+        _timer = new System.Timers.Timer(3000); // 3 seconds
         _timer.Elapsed += (s, e) =>
         {
             _visible = false;

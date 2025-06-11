@@ -11,8 +11,6 @@ namespace Stockify.Objects;
 public class OrderAction
 {
     public int Id { get; set; }
-    public int OrderId { get; set; }    
-
-    // public OrderStatus Status { get; set; }
+    public int OrderId { get; set; }            
     public OrderActionType ActionType { get; set; }
 }

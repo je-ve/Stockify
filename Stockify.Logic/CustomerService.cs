@@ -1,4 +1,5 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using System.Net.Http.Headers;
+using Microsoft.EntityFrameworkCore;
 using Stockify.Data;
 using Stockify.Objects;
 
@@ -13,8 +14,17 @@ public class CustomerService : ICustomerService
         _context = context;
     }
 
-    public async Task<List<Customer>> GetAllAsync()
+    public async Task<List<Customer>> GetAllAsync(bool onlyActive = true)
     {
+        if (onlyActive)
+        {
+            return await _context.Customers
+            .Where(c => c.IsActive)
+              .Include(c => c.CreatedBy)
+              .Include(c => c.UpdatedBy)
+              .ToListAsync();
+        }
+
         return await _context.Customers
           .Include(c => c.CreatedBy)
           .Include(c => c.UpdatedBy)
@@ -54,9 +64,41 @@ public class CustomerService : ICustomerService
             await _context.SaveChangesAsync();
         }
     }
-    public async Task<PaginatedResult<Customer>> GetPagedAsync(int pageNumber, int pageSize, string sortBy, bool ascending)
+
+    //Wanneer klant wordt verwijderd wordt deze functie uitgevoerd. 
+    public async Task SetInactiveAsync(int id, string currentUserId)
     {
-        var query = _context.Customers.Include(c => c.CreatedBy).Include(c => c.UpdatedBy).AsQueryable();
+        var customer = await _context.Customers.FindAsync(id);
+        if (customer != null)
+        {
+            var order = await _context.Orders.Where(o => (o.CustomerId == id && o.Status == OrderStatus.Created)).FirstOrDefaultAsync();
+            if (order != null) throw new Exception("Klanten met openstaande bestelling kunnen niet verwijderd worden");
+
+            customer.IsActive = false; // Soft delete
+            customer.UpdatedAt = DateTime.UtcNow;
+            customer.UpdatedById = currentUserId;
+            customer.Name = "Anoniem";
+            customer.Email = "inactive@unknow.com";
+            customer.Street = "Onbekend";
+            customer.HouseNumber = "0";
+            customer.City = "Onbekend";
+
+            _context.Customers.Update(customer);
+            await _context.SaveChangesAsync();
+        }
+    }
+
+    public async Task<PaginatedResult<Customer>> GetPagedAsync(int pageNumber, int pageSize, string sortBy, bool ascending, bool onlyActive = true)
+    {
+        var query = _context.Customers
+        .Include(c => c.CreatedBy)
+        .Include(c => c.UpdatedBy)
+        .AsQueryable();
+
+        if (onlyActive)
+        {
+            query = query.Where(c => c.IsActive); // assuming "Active" is a bool property
+        }
 
         // Apply sorting
         query = (sortBy.ToLower(), ascending) switch

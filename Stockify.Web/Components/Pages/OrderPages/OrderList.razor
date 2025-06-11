@@ -8,6 +8,11 @@
 @using Stockify.Web.Components.Shared
 
 @attribute [Authorize]
+
+@*table with summary of existing orders, with a button to add a new order, buttons to deliver, cancel or delete an existing one and a link to view the order detail
+	
+*@
+
 <PageTitle>Bestellingen</PageTitle>
 
 <h3>Bestellingen</h3>
@@ -34,7 +39,7 @@ else
 		<PageSizeSelector PageSize="@PageSize" OnPageSizeChanged="ChangePageSize" />
 
 		<div class="mb-2">
-			<a class="btn btn-light ms-4 text-secondary" href="/order/0">
+			<a class="btn btn-light ms-4 text-secondary border border-1" href="/order/0">
 				<span><i class="bi bi-plus-lg"></i> Nieuwe bestelling</span>
 			</a>
 		</div>
@@ -42,7 +47,7 @@ else
 
 	<table class="table table-bordered small">
 		<thead>
-			<tr>
+			<tr class="small">
 				<th></th>
 				<SortableHeader SortColumn="customerNumber" CurrentSortBy="@SortBy" SortAscending="@SortAscending" OnSortChanged="HandleSortChanged">
 					Klantnummer
@@ -70,7 +75,7 @@ else
 		<tbody>
 			@foreach (var Order in Orders)
 			{
-				<tr>
+				<tr class="small">
 					<td><a href="Order/@Order.Id">@Order.Id</a></td>
 					<td>@Order.Customer.Number</td>
 					<td>@Order.Customer.Name</td>
@@ -79,14 +84,14 @@ else
 					<td>@Order.UpdatedBy?.UserName</td>
 					<td>@Order.UpdatedAt.ToBelgianFormat()</td>
 					<td>@Order.Status</td>
-					<td>
-						<button class="btn btn-info btn-sm" disabled="@(Order.Status != OrderStatus.Created)" data-bs-toggle="tooltip" title="Markeer als geleverd" @onclick="() => ShowDeliverConfirm(Order.Id)">
+					<td class="p-1 pe-0">
+						<button class="btn btn-info btn-sm m-0" disabled="@(Order.Status != OrderStatus.Created)" data-bs-toggle="tooltip" title="Markeer als geleverd" @onclick="() => ShowDeliverConfirm(Order.Id)">
 							<i class="bi bi-truck"></i>
 						</button>
 						<button type="button" class="btn btn-warning btn-sm" disabled="@(Order.Status != OrderStatus.Created)" data-bs-toggle="tooltip" title="Markeer als geannuleerd" @onclick="() => ShowCancelConfirm(Order.Id)">
 							<i class="bi bi-x-circle text-dark"></i>
 						</button>
-						<button type="button" class="btn btn-danger btn-sm" disabled="@(Order.Status == OrderStatus.Delivered)" data-bs-toggle="tooltip" title="Bestelling schrappen" @onclick="() => ShowDeleteConfirm(Order.Id)">
+						<button type="button" class="btn btn-danger btn-sm m-0" disabled="@(Order.Status == OrderStatus.Delivered)" data-bs-toggle="tooltip" title="Bestelling schrappen" @onclick="() => ShowDeleteConfirm(Order.Id)">
 							<i class="bi bi-trash"></i>
 						</button>
 					</td>
@@ -141,8 +146,7 @@ else
 		try
 		{
 			await orderActionService.CreateOrderAction(orderId, OrderActionType.Delivery);
-			ToastService.ShowSuccess($"Bestelling {orderId} is gemarkeerd als geleverd.");
-			// your logic here
+			ToastService.ShowSuccess($"Bestelling {orderId} is gemarkeerd als geleverd.");			
 		}
 		catch (Exception ex)
 		{
@@ -167,8 +171,7 @@ else
 		try
 		{
 			await orderActionService.CreateOrderAction(orderId, OrderActionType.Cancel);
-			ToastService.ShowSuccess($"Bestelling {orderId} is geannuleerd.");
-			// your logic here
+			ToastService.ShowSuccess($"Bestelling {orderId} is geannuleerd.");			
 		}
 		catch (Exception ex)
 		{
@@ -193,8 +196,7 @@ else
 		try
 		{
 			await orderActionService.CreateOrderAction(orderId, OrderActionType.Delete);
-			ToastService.ShowSuccess($"Bestelling {orderId} is verwijderd.");
-			// your logic here
+			ToastService.ShowSuccess($"Bestelling {orderId} is verwijderd.");			
 		}
 		catch (Exception ex)
 		{
@@ -211,9 +213,7 @@ else
 			await LoadOrdersData();
 			StateHasChanged();
 		}
-	}
-
-	//private string LastAction = "";
+	}	
 
 	// Pagination
 	private int CurrentPage = 1;

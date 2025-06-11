@@ -1,9 +1,12 @@
 ﻿@page "/users"
 @inject IToastService ToastService
+@inject AuthenticationStateProvider AuthenticationStateProvider
 @using Microsoft.AspNetCore.Authorization
 @inject IUserService svc
 
-@* attribute [Authorize]*@
+@attribute [Authorize]
+
+@*Overzicht gebruikers, met knoppen en modals om gebruiker toe te voegen, email te veranderen en passwoord te veranderen*@
 
 <h3>Gebruikers</h3>
 
@@ -23,11 +26,15 @@ else
 {
 	<div class="d-flex justify-content-end mb-2">
 		<PageSizeSelector PageSize="@PageSize" OnPageSizeChanged="ChangePageSize" />
-		<button class="btn btn-ternary text-secondary border" @onclick="ShowAddModal">
-			<i class="bi bi-plus-lg">Gebruiker toevoegen</i>
-		</button>
-	</div>	
-	<table class="table table-bordered table-layout-fixed">
+
+		<div class="mb-2">
+			<button class="btn btn-light ms-4 text-secondary border border-1" @onclick="ShowAddModal">
+				<i class="bi bi-plus-lg">Gebruiker toevoegen</i>
+			</button>
+		</div>
+
+	</div>
+	<table class="table table-sm table-bordered table-layout-fixed">
 		<thead>
 			<tr>
 				<SortableHeader SortColumn="name" CurrentSortBy="@SortBy" SortAscending="@SortAscending" OnSortChanged="HandleSortChanged">
@@ -40,19 +47,19 @@ else
 			@foreach (var user in Users)
 			{
 				<tr>
-					<td class="w-100">@user.Email</td>
+					<td class="w-100 small">@user.Email</td>
 					<td class="text-nowrap">
-						<button class="btn btn-ternary text-secondary border me-2" @onclick="() => ShowEditModal(user.Id)">
+						<button class="btn btn-sm btn-light text-secondary border border-1 @(user.Id == currentUserId ? "disabled" : "")" @onclick="() => ShowEditModal(user.Id)">
 							<i class="bi bi-pencil-square"></i> Bewerken
 						</button>
 
-						<button class="btn btn-ternary text-secondary border me-2" @onclick="() => ShowEditPasswordModal(user.Id)">
+						<button class="btn btn-sm btn-light text-secondary border border-1" @onclick="() => ShowEditPasswordModal(user.Id)">
 							<i class="bi bi-pencil-square"></i> Verander paswoord
 						</button>
 
-						<button class="btn btn-danger" @onclick="() => ShowDeleteConfirmation(user.Id)">
+						@* 						<button class="btn btn-danger" @onclick="() => ShowDeleteConfirmation(user.Id)">
 							<i class="bi bi-trash"></i> Verwijderen
-						</button>
+						</button> *@
 					</td>
 				</tr>
 			}
@@ -227,13 +234,20 @@ else
 
 	public List<UserViewModel> Users { get; set; } = new List<UserViewModel>();
 	public bool IsLoading { get; set; } = true;
-
+	private string? currentUserId;
 	private bool _showDeleteModal = false;
 
 	private bool IsSaving = false;
 
 	protected override async Task OnInitializedAsync()
 	{
+		var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+		var user = authState.User;
+		if (user.Identity?.IsAuthenticated ?? false)
+		{
+			currentUserId = user.FindFirst(c => c.Type == "sub")?.Value // OpenID Connect "sub" claim
+						?? user.FindFirst(c => c.Type == ClaimTypes.NameIdentifier)?.Value; // fallback
+		}
 		await LoadUserData();
 	}
 
@@ -301,18 +315,16 @@ else
 		IsSaving = true;
 		try
 		{
-			var result = await svc.AddAsync(newUser.Email, newUser.Password); // Use a strong password
+			var result = await svc.AddAsync(newUser.Email, newUser.Password); 
 			if (result.Succeeded)
 			{
-				// Optionally, you can add the new user to the Users list
-				//Users.Add(new UserViewModel { Email = editUser.Email });
-				ToastService.ShowSuccess("Gebruiker succesvol toegevoegd!"); // Show success message
+				ToastService.ShowSuccess("Gebruiker toegevoegd!"); 
 			}
 			else
 			{
 				foreach (var error in result.Errors)
 				{
-					ToastService.ShowError(error.Description); // Show error messages
+					ToastService.ShowError(error.Description); 
 				}
 			}
 			await LoadUserData(); // Refresh the list after saving
@@ -354,7 +366,7 @@ else
 				var result = await svc.UpdateAsync(editUser.Id, editUser.Email); // Update user details
 				if (result.Succeeded)
 				{
-					ToastService.ShowSuccess("Gebruiker succesvol aangepast!"); // Show success message
+					ToastService.ShowSuccess("Gebruiker aangepast!"); // Show success message
 					await LoadUserData(); // Refresh the list after saving
 				}
 				else

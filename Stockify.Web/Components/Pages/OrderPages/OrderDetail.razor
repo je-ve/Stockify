@@ -10,6 +10,14 @@
 @inject AuthenticationStateProvider AuthenticationStateProvider
 @attribute [Authorize]
 
+@*Header shows ordercustomer and orderid. With a modal to change the customer. Buttons to deliver, cancel or delete the order (with a confirm modal) 
+	Buttons to add a new orderline. When order id (parameter) is 0 , a new order will be created.
+	Buttons to add new orderlines or changes existing ones.
+	Table with all the orderlines in the order
+	If an orderline is updated or created, there is a check if the product from the orderline is already in the order
+	If so, the quantity of the line that is being added/edited will be added to the existing orderline. The current line will not be created, or deleted in case of an existing line 
+*@
+
 <h3 class="d-flex justify-content-between align-items-center">
 	Bestelling @(isNewOrder ? "Aanmaken" : $"#{order.Id}")
 </h3>
@@ -37,7 +45,7 @@ else
 					</p>
 				</div>
 				<div>
-					<button class="btn btn-light text-secondary" disabled="@(order?.Status != OrderStatus.Created)" @onclick ="OpenEditHeaderModal"><i class="bi bi-pencil me-1"> Klant bewerken</i></button>
+					<button class="btn btn-light text-secondary border border-1" disabled="@(order?.Status != OrderStatus.Created)" @onclick="OpenEditHeaderModal"><i class="bi bi-pencil me-1"> Klant bewerken</i></button>
 				</div>
 			</div>
 		</div>
@@ -93,19 +101,22 @@ else
 		<h3>Producten</h3>
 
 		<div class="d-flex justify-content-between mb-2">
-		<span>
-			<button class="btn btn-light text-secondary" disabled="@(order?.Status != OrderStatus.Created)" @onclick ="() => OpenOrderLineModal(0)">
-				<i class="bi bi-plus-lg"> Voeg product toe</i>
-			</button>
+			<span>
+				<button class="btn btn-light text-secondary border border-1" disabled="@(order?.Status != OrderStatus.Created)" @onclick="() => OpenOrderLineModal(0)">
+					<i class="bi bi-plus-lg"> Voeg product toe</i>
+				</button>
 			</span>
 			<span>
-				<button class="btn btn-info mx-lg-1" disabled="@(order.Status != OrderStatus.Created || order?.OrderLines?.Count==0 )" data-bs-toggle="tooltip" title="Markeer als geleverd" @onclick="() => ShowDeliverConfirm(order.Id)">
+				<button class="btn btn-info  border border-info border-3 mx-lg-1 @( (order.Status!=OrderStatus.Created || order?.OrderLines?.Count==0 || IsSaving) ? "disabled" : "" )"
+						data-bs-toggle="tooltip" title="Markeer als geleverd" @onclick="() => ShowDeliverConfirm(order.Id)">
 					<i class="bi bi-truck me-2"></i> <span class="me-2">Leveren</span>
 				</button>
-				<button type="button" class="btn btn-warning mx-lg-1" disabled="@(order.Status != OrderStatus.Created || order?.OrderLines?.Count==0 )" data-bs-toggle="tooltip" title="Markeer als geannuleerd" @onclick="() => ShowCancelConfirm(order.Id)">
+				<button type="button" class="btn btn-warning border border-warning border-3 mx-lg-1 @( (order.Status!=OrderStatus.Created || order?.OrderLines?.Count==0 || IsSaving) ? "disabled" : "" )"
+						data-bs-toggle="tooltip" title="Markeer als geannuleerd" @onclick="() => ShowCancelConfirm(order.Id)">
 					<i class="bi bi-x-circle text-dark me-2"></i>  Annuleren
 				</button>
-				<button type="button" class="btn btn-danger ms-lg-1" disabled="@(order.Status == OrderStatus.Delivered || order?.OrderLines?.Count==0 )" data-bs-toggle="tooltip" title="Bestelling schrappen" @onclick="() => ShowDeleteConfirm(order.Id)">
+				<button type="button" class="btn btn-danger border border-danger border-3 ms-lg-1 @( (order.Status==OrderStatus.Delivered || order?.OrderLines?.Count==0 || IsSaving) ? "disabled" : "" )"
+						data-bs-toggle="tooltip" title="Bestelling schrappen" @onclick="() => ShowDeleteConfirm(order.Id)">
 					<i class="bi bi-trash"></i>  Verwijderen
 				</button>
 			</span>
@@ -499,7 +510,7 @@ else
 					existingLine.ProductId = orderLineInputModel.ProductId;
 					existingLine.Quantity = orderLineInputModel.Quantity;
 					isSaving = true;
-					ToastService.ShowSuccess("Bestelling aan het bijwerken");
+					ToastService.ShowSuccess("Bestelling bijgewerk");
 					await OrderLineService.UpdateAsync(existingLine, currentUserId);
 					products = await ProductService.GetAllAsync();
 					isSaving = false;
@@ -584,10 +595,11 @@ else
 	private async Task DeliverOrder(int orderId)
 	{
 		IsSaving = true;
+		
 		try
 		{
 			await orderActionService.CreateOrderAction(orderId, OrderActionType.Delivery);
-			ToastService.ShowSuccess($"Bestelling {orderId} is gemarkeerd als geleverd.");			
+			ToastService.ShowSuccess($"Bestelling {orderId} is gemarkeerd als geleverd.");
 		}
 		catch (Exception ex)
 		{
@@ -595,7 +607,7 @@ else
 		}
 		finally
 		{
-			IsSaving = false;			
+			IsSaving = false;
 			StateHasChanged();
 		}
 	}
@@ -620,7 +632,7 @@ else
 		}
 		finally
 		{
-			IsSaving = false;			
+			IsSaving = false;
 			StateHasChanged();
 		}
 	}
@@ -637,6 +649,7 @@ else
 		{
 			await orderActionService.CreateOrderAction(orderId, OrderActionType.Delete);
 			ToastService.ShowSuccess($"Bestelling {orderId} is verwijderd.");
+			NavigationManager.NavigateTo("/orders");
 			// your logic here
 		}
 		catch (Exception ex)
@@ -650,7 +663,7 @@ else
 		}
 		finally
 		{
-			IsSaving = false;			
+			IsSaving = false;
 			StateHasChanged();
 		}
 	}
