@@ -58,3 +58,4 @@ Properties/PublishProfiles/
 
 /Stockify.API/appsettings.json
 /Stockify.Web/appsettings.json
+/Stockify.Web/appsettings.Development.json
