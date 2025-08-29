@@ -1,6 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 namespace Stockify.API.Dto;
-public class OrderLineDto
+public class CreateOrderLineDto
 {
     [Required]
     public int ProductId { get; set; }

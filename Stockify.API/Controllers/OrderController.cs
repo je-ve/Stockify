@@ -34,7 +34,7 @@ public class OrderController : ControllerBase
     [ProducesResponseType(StatusCodes.Status201Created)]
     // POST http://localhost:5008/api/order
 
-    public async Task<IActionResult> Create([FromBody] OrderDto order)
+    public async Task<IActionResult> Create([FromBody] CreateOrderDto order)
     {
         if (order == null || order.Lines == null || order.Lines.Count == 0)
         {

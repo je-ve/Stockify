@@ -37,7 +37,7 @@ public class customerController : ControllerBase
     [HttpPost]
     [ProducesResponseType(StatusCodes.Status201Created)]
     // POST http://localhost:5008/api/customer/    
-    public async Task<IActionResult> Create([FromBody] CustomerDto customer)
+    public async Task<IActionResult> Create([FromBody] CreateCustomerDto customer)
     {
         var customerToCreate = new Customer
         {
@@ -52,7 +52,7 @@ public class customerController : ControllerBase
 
     [HttpPatch("{id:int}")]
     // PATCH http://localhost:5008/api/customer/id    
-    public async Task<IActionResult> UpdateCustomer(int id, [FromBody] CustomerDto updatedcustomer)
+    public async Task<IActionResult> UpdateCustomer(int id, [FromBody] CreateCustomerDto updatedcustomer)
     {
         var customer = await _customerService.GetByIdAsync(id);
 

@@ -1,11 +1,11 @@
 ﻿using System.ComponentModel.DataAnnotations;
 namespace Stockify.API.Dto;
-public class OrderDto
+public class CreateOrderDto
 {
     [Required]
     public int customerId { get; set; }
 
     [Required]
-    public List<OrderLineDto> Lines { get; set; } = new();
+    public List<CreateOrderLineDto> Lines { get; set; } = new();
 
 }

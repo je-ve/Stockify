@@ -17,20 +17,28 @@ public class ProductController : ControllerBase
     [HttpGet]
     public async Task<IActionResult> Get()
     {
-        var products = await _productService.GetAllAsync();
+        var allProducts = await _productService.GetAllAsync();
+        var products = allProducts
+            .Select(p => new ProductDto
+            {
+                Name = p.Name,
+                SerialNumber = p.SerialNumber
+            })
+            .ToList();
         return Ok(products);
     }
 
     [HttpGet("{id:int}")]
     public async Task<IActionResult> GetById(int id)
     {
-        var product = await _productService.GetByIdAsync(id);
-        if (product == null)  return NotFound("Product not found");
+        var res = await _productService.GetByIdAsync(id);
+        if (res == null) return NotFound("Product not found");
+        var product = new ProductDto() { Name = res.Name, SerialNumber = res.SerialNumber };
         return Ok(product);
     }
 
-    
-    
+
+
     [HttpPost]
     [ProducesResponseType(StatusCodes.Status201Created)]
     // POST http://localhost:5008/api/product/    
@@ -42,7 +50,7 @@ public class ProductController : ControllerBase
             Name = product.Name
         };
 
-        await _productService.AddAsync(productToCreate, "068a5f94-7b85-4831-9d74-b2bf62d460e1");        
+        await _productService.AddAsync(productToCreate, "068a5f94-7b85-4831-9d74-b2bf62d460e1");
         return StatusCode(StatusCodes.Status201Created, new { Message = "Product created" });
     }
 
@@ -71,10 +79,4 @@ public class ProductController : ControllerBase
         await _productService.DeleteAsync(id);
         return Ok(new { Message = "Product deleted" });
     }
-
-
-
-
-
-
 }

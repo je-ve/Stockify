@@ -27,12 +27,15 @@ else
 	<div class="d-flex justify-content-end mb-2">
 		<PageSizeSelector PageSize="@PageSize" OnPageSizeChanged="ChangePageSize" />
 
-		<div class="mb-2">
-			<button class="btn btn-light ms-4 text-secondary border border-1" @onclick="ShowAddModal">
-				<i class="bi bi-plus-lg">Gebruiker toevoegen</i>
-			</button>
-		</div>
-
+		
+		@if (currentUserId == admin)
+		{
+			<div class="mb-2">
+				<button class="btn btn-light ms-4 text-secondary border border-1" @onclick="ShowAddModal">
+					<i class="bi bi-plus-lg">Gebruiker toevoegen</i>
+				</button>
+			</div>
+		}
 	</div>
 	<table class="table table-sm table-bordered table-layout-fixed">
 		<thead>
@@ -49,7 +52,7 @@ else
 				<tr>
 					<td class="w-100 small">@user.Email</td>
 					<td class="text-nowrap">
-						<button class="btn btn-sm btn-light text-secondary border border-1 @(user.Id == currentUserId ? "disabled" : "")" @onclick="() => ShowEditModal(user.Id)">
+						<button class="btn btn-sm btn-light text-secondary border border-1" @onclick="() => ShowEditModal(user.Id)">
 							<i class="bi bi-pencil-square"></i> Bewerken
 						</button>
 
@@ -236,6 +239,8 @@ else
 	public bool IsLoading { get; set; } = true;
 	private string? currentUserId;
 	private bool _showDeleteModal = false;
+	private string admin = "007b79ba-ea25-4b9e-be3c-26d402d7b508";
+
 
 	private bool IsSaving = false;
 
@@ -255,12 +260,22 @@ else
 	{
 		IsLoading = true;
 		Users = new List<UserViewModel>();
-		var result = await svc.GetPagedAsync(CurrentPage, PageSize, SortBy, SortAscending);
-		result.Items.ForEach(u => Users.Add(new UserViewModel { Email = u.UserName, Id = u.Id }));
-		TotalCustomers = result.TotalCount;
-		TotalPages = (int)Math.Ceiling((double)TotalCustomers / PageSize);
-		IsLoading = false;
-	}
+
+		if (currentUserId == admin)
+		{
+			var result = await svc.GetPagedAsync(CurrentPage, PageSize, SortBy, SortAscending);
+			result.Items.ForEach(u => Users.Add(new UserViewModel { Email = u.UserName, Id = u.Id }));
+			TotalCustomers = result.TotalCount;
+			TotalPages = (int)Math.Ceiling((double)TotalCustomers / PageSize);
+		}
+		else
+		{
+			var result = await svc.GetByIdAsync(currentUserId);
+			Users.Add(new UserViewModel { Email = result.UserName, Id = result.Id });
+		}
+
+        IsLoading = false;
+    }
 
 	//PAGINATION
 	private int CurrentPage = 1;

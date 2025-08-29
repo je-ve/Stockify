@@ -21,7 +21,7 @@ public class OrderActionController : ControllerBase
     }
 
     [HttpPost("add")]
-    public async Task<IActionResult> AddOrderAction([FromBody] OrderActionDto orderActionDto)
+    public async Task<IActionResult> AddOrderAction([FromBody] CreateOrderActionDto orderActionDto)
     {
 
         var order = await _orderService.GetByIdAsync(orderActionDto.OrderId);

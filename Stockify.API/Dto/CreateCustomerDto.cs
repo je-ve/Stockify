@@ -3,7 +3,7 @@ using Stockify.Objects;
 using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Stockify.API.Dto;
-public class CustomerDto
+public class CreateCustomerDto
 {
 
 

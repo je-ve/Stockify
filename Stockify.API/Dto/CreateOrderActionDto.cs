@@ -1,6 +1,6 @@
 ﻿namespace Stockify.API.Dto;
 
-public class OrderActionDto
+public class CreateOrderActionDto
 {
     public int OrderId { get; set; }    
     public int orderActionType { get; set; } 
