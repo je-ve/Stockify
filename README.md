@@ -1,4 +1,4 @@
 # Stockify
-Einwerk syntra
-Applicatie voorraadbeheer
-http://stockify.runasp.net/
+**Einwerk Syntra**  
+Applicatie voorraadbeheer  
+[Stockify App](http://stockify.runasp.net/)
