@@ -1,5 +1,5 @@
 # Stockify
 **Einwerk Syntra**  
 Applicatie voorraadbeheer  
-.net Blazor app
+.net Blazor  
 [Stockify App](http://stockify.runasp.net/)
