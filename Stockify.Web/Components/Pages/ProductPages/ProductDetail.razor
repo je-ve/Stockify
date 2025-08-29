@@ -173,8 +173,8 @@ else
 				<tr class="small">
 					<td>@action.Type</td>
 					<td>@action.Quantity</td>
-					<td>@action.CreatedAt.ToBelgianFormat()</td>
-					<td>@action.OrderLine?.OrderId</td>
+					<td>@action.CreatedAt.ToBelgianFormat()</td>					
+					<td>@if(@action.OrderLine?.OrderId != null){<a href="Order/@action.OrderLine?.OrderId">@action.OrderLine?.OrderId</a>}</td>
 				</tr>
 			}
 		</tbody>
@@ -264,6 +264,12 @@ else
 					Name = Product.Name,
 					SerialNumber = Product.SerialNumber
 				};
+		}
+		else
+		{
+			
+				ToastService.ShowError("Product niet gevonden.");
+				NavigationManager.NavigateTo("/products");					
 		}
 		IsLoading = false;
 	}

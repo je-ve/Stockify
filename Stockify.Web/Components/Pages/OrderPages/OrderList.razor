@@ -5,7 +5,7 @@
 @using Microsoft.AspNetCore.Authorization
 @using Stockify.Extensions
 @using Stockify.Web.ViewModels
-@using Stockify.Web.Components.Shared
+@using Stockify.Web.Components.Shared 
 
 @attribute [Authorize]
 
@@ -76,24 +76,32 @@ else
 			@foreach (var Order in Orders)
 			{
 				<tr class="small">
-					<td><a href="Order/@Order.Id">@Order.Id</a></td>
-					<td>@Order.Customer.Number</td>
-					<td>@Order.Customer.Name</td>
-					<td>@Order.CreatedBy?.UserName</td>
-					<td>@Order.CreatedAt.ToBelgianFormat()</td>
-					<td>@Order.UpdatedBy?.UserName</td>
-					<td>@Order.UpdatedAt.ToBelgianFormat()</td>
-					<td>@Order.Status</td>
-					<td class="p-1 pe-0">
-						<button class="btn btn-info btn-sm m-0" disabled="@(Order.Status != OrderStatus.Created)" data-bs-toggle="tooltip" title="Markeer als geleverd" @onclick="() => ShowDeliverConfirm(Order.Id)">
-							<i class="bi bi-truck"></i>
+					<td class="p-0"><a class="btn-link btn-secondary" href="Order/@Order.Id">@Order.Id</a></td>
+					<td class="p-0"><a href="Customer/@Order.Customer.Id">@Order.Customer.Number</a></td>
+					<td class="p-0">@Order.Customer.Name</td>
+					<td class="p-0">@Order.CreatedBy?.UserName</td>
+					<td class="p-0">@Order.CreatedAt.ToBelgianFormat()</td>
+					<td class="p-0">@Order.UpdatedBy?.UserName</td>
+					<td class="p-0">@Order.UpdatedAt.ToBelgianFormat()</td>
+					<td class="p-0">@Order.Status</td>
+					<td class="p-0">
+						<button class="badge btn btn-info m-0" disabled="@(Order.Status != OrderStatus.Created)" data-bs-toggle="tooltip" title="Markeer als geleverd" @onclick="() => ShowDeliverConfirm(Order.Id)">
+							<i class="bi bi-truck text-light"></i>
 						</button>
-						<button type="button" class="btn btn-warning btn-sm" disabled="@(Order.Status != OrderStatus.Created)" data-bs-toggle="tooltip" title="Markeer als geannuleerd" @onclick="() => ShowCancelConfirm(Order.Id)">
+						<button class="badge btn btn-warning btn-sm" disabled="@(Order.Status != OrderStatus.Created)" data-bs-toggle="tooltip" title="Markeer als geannuleerd" @onclick="() => ShowCancelConfirm(Order.Id)">
+							<i class="bi bi-x-circle text-light"></i>
+						</button>
+						<button class="badge btn btn-danger btn-sm m-0" disabled="@(Order.Status == OrderStatus.Delivered)" data-bs-toggle="tooltip" title="Bestelling schrappen" @onclick="() => ShowDeleteConfirm(Order.Id)">
+							<i class="bi bi-trash text-light"></i>
+						</button>
+
+@* 						<button class="btn btn-warning btn-sm" disabled="@(Order.Status != OrderStatus.Created)" data-bs-toggle="tooltip" title="Markeer als geannuleerd" @onclick="() => ShowCancelConfirm(Order.Id)">
 							<i class="bi bi-x-circle text-dark"></i>
 						</button>
-						<button type="button" class="btn btn-danger btn-sm m-0" disabled="@(Order.Status == OrderStatus.Delivered)" data-bs-toggle="tooltip" title="Bestelling schrappen" @onclick="() => ShowDeleteConfirm(Order.Id)">
+						<button class="btn btn-danger btn-sm m-0" disabled="@(Order.Status == OrderStatus.Delivered)" data-bs-toggle="tooltip" title="Bestelling schrappen" @onclick="() => ShowDeleteConfirm(Order.Id)">
 							<i class="bi bi-trash"></i>
 						</button>
+ *@
 					</td>
 				</tr>
 			}
@@ -146,7 +154,7 @@ else
 		try
 		{
 			await orderActionService.CreateOrderAction(orderId, OrderActionType.Delivery);
-			ToastService.ShowSuccess($"Bestelling {orderId} is gemarkeerd als geleverd.");			
+			ToastService.ShowSuccess($"Bestelling {orderId} is gemarkeerd als geleverd.");
 		}
 		catch (Exception ex)
 		{
@@ -171,7 +179,7 @@ else
 		try
 		{
 			await orderActionService.CreateOrderAction(orderId, OrderActionType.Cancel);
-			ToastService.ShowSuccess($"Bestelling {orderId} is geannuleerd.");			
+			ToastService.ShowSuccess($"Bestelling {orderId} is geannuleerd.");
 		}
 		catch (Exception ex)
 		{
@@ -196,7 +204,7 @@ else
 		try
 		{
 			await orderActionService.CreateOrderAction(orderId, OrderActionType.Delete);
-			ToastService.ShowSuccess($"Bestelling {orderId} is verwijderd.");			
+			ToastService.ShowSuccess($"Bestelling {orderId} is verwijderd.");
 		}
 		catch (Exception ex)
 		{
@@ -213,7 +221,7 @@ else
 			await LoadOrdersData();
 			StateHasChanged();
 		}
-	}	
+	}
 
 	// Pagination
 	private int CurrentPage = 1;

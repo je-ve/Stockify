@@ -39,8 +39,7 @@ else
 
 	<table class="table table-bordered small">
 		<thead>
-			<tr>
-				<th></th>
+			<tr>				
 				<SortableHeader SortColumn="SerialNumber" CurrentSortBy="@SortBy" SortAscending="@SortAscending" OnSortChanged="HandleSortChanged">
 					Serienummer
 				</SortableHeader>
@@ -77,8 +76,7 @@ else
 			@foreach (var Product in Products)
 			{
 				<tr class="small">
-					<td><a href="Product/@Product.Id">@Product.Id</a></td>
-					<td>@Product.SerialNumber</td>
+					<td><a href="Product/@Product.Id">@Product.SerialNumber</a></td>					
 					<td>@Product.Name</td>
 					<td>@Product.TotalStock</td>
 					<td>@Product.AvailableStock</td>

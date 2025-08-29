@@ -164,6 +164,13 @@ else
 					City = Customer.City
 				};
 		}
+		else
+		{
+
+			ToastService.ShowError("Klant niet gevonden.");
+			NavigationManager.NavigateTo("/customers");			
+		}
+
 		IsLoading = false;
 	}
 
